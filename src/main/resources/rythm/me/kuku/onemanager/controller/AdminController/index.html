@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>OneManager设置</title>
+    <link rel="stylesheet" href="//cdn.bootcss.com/zui/1.9.2/css/zui.min.css">
+</head>
+<body>
+<div class="container">
+    <ul class="nav nav-primary nav-justified">
+        <li class="active"><a data-tab href="#index">首页</a></li>
+        <li><a data-tab href="#var">平台变量</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="index">
+            <div class="row">
+                <br/>
+                <form class="form">
+                    <div class="form-group">
+                        <label for="driveType">网盘类型：</label>
+                        <select id="driveType" class="form-control">
+                            <option value="onedrive">onedrive</option>
+                            <option value="onedriveCn">onedriveCn</option>
+                        </select>
+                    </div>
+                    <a id="driveTypeBtn" href="/onedrive" class="btn btn-primary">添加盘</a>
+                </form>
+            </div>
+        </div>
+        <div class="tab-pane fade" id="var">
+            <div class="row">
+                <br/>
+                <form>
+                    <div class="form-group">
+                        <label for="adminLoginPage">adminloginpage</label>
+                        <input type="text" class="form-control" id="adminLoginPage" placeholder="如果设置，登录按钮及页面隐藏。管理登录的页面不在是/admin，而是'/此设置的值'">
+                    </div>
+                    <div class="form-group">
+                        <label for="autoJumpFirstDisk">autoJumpFirstDisk</label>
+                        <input type="text" class="form-control" id="autoJumpFirstDisk" placeholder="用于多个磁盘，如果为1，则自动跳转到第一个磁盘">
+                    </div>
+                    <div class="form-group">
+                        <label for="background">background</label>
+                        <input type="text" class="form-control" id="background" placeholder="设置一个url作为背景">
+                    </div>
+                    <div class="form-group">
+                        <label for="backgroundM">backgroundm</label>
+                        <input type="text" class="form-control" id="backgroundM" placeholder="设置一个url作为手机端用的背景">
+                    </div>
+                    <div class="form-group">
+                        <label for="customCss">customCss</label>
+                        <input type="text" class="form-control" id="customCss" placeholder="<style>，在<head>最后面">
+                    </div>
+                    <div class="form-group">
+                        <label for="customScript">customScript</label>
+                        <input type="text" class="form-control" id="customScript" placeholder="<script>，在所有页都会存在，例如放一个http跳转到https">
+                    </div>
+                    <div class="form-group">
+                        <label for="customTheme">customTheme</label>
+                        <input type="text" class="form-control" id="customTheme" placeholder="html格式的主题的url">
+                    </div>
+                    <div class="form-group">
+                        <label for="disableShowThumb">disableShowThumb</label>
+                        <input type="text" class="form-control" id="disableShowThumb" placeholder="如果填1，显示缩略按钮将被隐藏">
+                    </div>
+                    <div class="form-group">
+                        <label for="dontBasicAuth">dontBasicAuth</label>
+                        <input type="text" class="form-control" id="dontBasicAuth" placeholder="如果为1，加密目录不再弹出用户名和密码窗口，只会显示主题自带的页面">
+                    </div>
+                    <div class="form-group">
+                        <label for="forceHttps">forceHttps</label>
+                        <input type="text" class="form-control" id="forceHttps" placeholder="0或1，如果为1会强制跳转到https">
+                    </div>
+                    <div class="form-group">
+                        <label for="hideFunctionalityFile">hideFunctionalityFile</label>
+                        <input type="text" class="form-control" id="hideFunctionalityFile" placeholder="0 或 1。如果 1, 某些文件不列表给游客看，但它的功能正常，比如readme.md">
+                    </div>
+                    <div class="form-group">
+                        <label for="passFile">passfile</label>
+                        <input type="text" class="form-control" id="passFile" placeholder="自定义密码文件的名字，可以是'pppppp'，也可以是'aaaa.txt'等等；列目录时不会显示，只有知道密码才能查看或下载此文件。密码是这个文件的内容，可以空格、可以中文；">
+                    </div>
+                    <div class="form-group">
+                        <label for="referrer">referrer</label>
+                        <input type="text" class="form-control" id="referrer" placeholder="只有这些域名能引用本站资源。格式为a1.com|b1.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="siteName">siteName</label>
+                        <input type="text" class="form-control" id="siteName" placeholder="网站的名称">
+                    </div>
+                    <button type="submit" class="btn btn-primary">设置</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+<script src="//cdn.bootcss.com/zui/1.9.2/lib/jquery/jquery.js"></script>
+<script src="//cdn.bootcss.com/zui/1.9.2/js/zui.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $("#driveType").change(function () {
+            $("#driveTypeBtn").attr("href", this.value)
+        })
+    })
+</script>
+</html>

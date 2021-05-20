@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>绑定onedrive</title>
+    <link rel="stylesheet" href="//cdn.bootcss.com/zui/1.9.2/css/zui.min.css">
+</head>
+<body>
+<div class="container">
+    <div class="row"><h1>Select Account Type</h1></div>
+    <div class="row">
+        <form>
+            <div class="form-group">
+                <label for="label">标签</label>
+                <input type="text" class="form-control" id="label" placeholder="一个标签，用于保存配置，多盘时会显示在url中">
+            </div>
+            <div class="form-group">
+                <label for="name">显示名称</label>
+                <input type="text" class="form-control" id="name" placeholder="这个盘你想显示什么名称">
+            </div>
+            <div class="form-group">
+                <div class="radio">
+                    <label>
+                        <input type="radio" name="onedriveType" value="0" checked>MS: 国际版（商业版与个人版）
+                    </label>
+                </div>
+                <div id="odInner" style="margin-left: 35px">
+                    <input type="checkbox" id="odBtn">用自己申请的应用ID与机密，不用OneManager默认的
+                    <div id="odClient" style="display: none">
+                        <label for="odClientId">return_uri(Reply URL)</label><br/>
+                        <label for="odClientId">https://scfonedrive.github.io/</label>
+                        <div class="form-group">
+                            <label for="odClientId">client_id</label>
+                            <input type="text" class="form-control" id="odClientId" placeholder="">
+                        </div>
+                        <div class="form-group">
+                            <label for="odClientSecret">client_secret</label>
+                            <input type="text" class="form-control" id="odClientSecret" placeholder="">
+                        </div>
+                    </div>
+                </div>
+                <div class="radio">
+                    <label>
+                        <input type="radio" name="onedriveType" value="1">CN: 世纪互联版
+                    </label>
+                </div>
+<!--                <div class="radio">-->
+<!--                    <label>-->
+<!--                        <input type="radio" name="onedriveType" value="2">Sharelink: 共享链接-->
+<!--                    </label>-->
+<!--                </div>-->
+            </div>
+            <button type="submit" class="btn btn-primary">确认</button>
+        </form>
+    </div>
+</div>
+</body>
+<script src="//cdn.bootcss.com/zui/1.9.2/lib/jquery/jquery.js"></script>
+<script src="//cdn.bootcss.com/zui/1.9.2/js/zui.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $("input[name=onedriveType]").click(function () {
+            let value = $(this).val()
+            if (value === 0){
+                $("#odInner").show()
+            }
+        })
+        $("#odBtn").click(function () {
+            let is = $(this).is(':checked')
+            if(is) $("#odClient").show()
+            else $("#odClient").hide()
+        })
+    })
+</script>
+</html>
