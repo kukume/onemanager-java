@@ -9,7 +9,7 @@
 <div class="container">
     <div class="row"><h1>Select Account Type</h1></div>
     <div class="row">
-        <form>
+        <div>
             <div class="form-group">
                 <label for="label">标签</label>
                 <input type="text" class="form-control" id="label" placeholder="一个标签，用于保存配置，多盘时会显示在url中">
@@ -50,8 +50,8 @@
 <!--                    </label>-->
 <!--                </div>-->
             </div>
-            <button type="submit" class="btn btn-primary">确认</button>
-        </form>
+            <button id="confirm" class="btn btn-primary">确认</button>
+        </div>
     </div>
 </div>
 </body>
@@ -70,6 +70,34 @@
             if(is) $("#odClient").show()
             else $("#odClient").hide()
         })
+        $("#confirm").click(function () {
+            let name = $("#name").val()
+            if (name === "") {
+                open("名称为空！")
+                return
+            }
+            let type = $("input[name=onedriveType]").val()
+            // noinspection EqualityComparisonWithCoercionJS
+            if (type == 0) {
+                let isChecked = $("#odBtn").is(":checked")
+                let data = {}
+                data.name = name
+                if (isChecked){
+                    data.clientId = $("#odClientId").val()
+                    data.clientSecret = $("#odClientSecret").val()
+                }
+                $.post("/onedrive/authUrl", data, function (data) {
+                    if (data.code === 200){
+                        window.location.href = data.data.url
+                    }else open(data.message)
+                })
+            }
+        })
     })
+    function open(msg) {
+        new $.zui.Messager(msg, {
+            icon: 'bell' // 定义消息图标
+        }).show();
+    }
 </script>
 </html>

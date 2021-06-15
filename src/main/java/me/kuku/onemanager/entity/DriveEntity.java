@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSON;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import me.kuku.onemanager.pojo.DriveType;
 
 import javax.persistence.*;
 
@@ -19,9 +20,13 @@ public class DriveEntity {
 	private Integer id;
 	@Column(unique = true)
 	private String name;
-	@Column(length = 2000)
+	private DriveType driveType;
+	@Column(length = 30000)
 	private String config;
 
+	public DriveEntity(String name){
+		this.name = name;
+	}
 
 	public <T> T getConfigParse(Class<T> clazz){
 		if (config == null) {

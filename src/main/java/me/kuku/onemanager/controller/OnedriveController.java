@@ -1,8 +1,10 @@
 package me.kuku.onemanager.controller;
 
 import act.controller.annotation.UrlContext;
+import act.db.sql.tx.Transactional;
 import me.kuku.onemanager.entity.DriveEntity;
 import me.kuku.onemanager.logic.OnedriveLogic;
+import me.kuku.onemanager.pojo.DriveType;
 import me.kuku.onemanager.pojo.OnedrivePojo;
 import me.kuku.onemanager.pojo.Result;
 import me.kuku.onemanager.pojo.ResultStatus;
@@ -23,7 +25,10 @@ public class OnedriveController {
 	@Inject
 	private DriveService driveService;
 
-	private final String REDIRECT_URL = "";
+	private final String REDIRECT_URL = "http://localhost:5460/onedrive/token";
+
+	@GetAction("callback")
+	public void callback(){}
 
 	@PostAction("authUrl")
 	public Result<?> authUrl(String name, String clientId, String clientSecret){
@@ -35,20 +40,26 @@ public class OnedriveController {
 		DriveEntity entity = new DriveEntity();
 		entity.setName(name);
 		entity.setConfigParse(onedrivePojo);
+		entity.setDriveType(DriveType.ONEDRIVE);
 		driveService.save(entity);
 		return Result.success(new HashMap<String, String>(){{
 			put("url", onedriveLogic.authorizationUrl(onedrivePojo, name));
 		}});
 	}
 
-	@PostAction("token")
-	public Result<?> token(String state, String code) throws IOException {
-		DriveEntity driveEntity = driveService.findByName(state);
-		if (driveEntity == null) return Result.failure(ResultStatus.DATA_NOT_EXISTS);
+	@Transactional
+	private void save(String name, String code) throws IOException {
+		DriveEntity driveEntity = driveService.findByName(name);
+		if (driveEntity == null) return;
 		OnedrivePojo pojo = driveEntity.getConfigParse(OnedrivePojo.class);
 		OnedrivePojo newPojo = onedriveLogic.token(pojo, code);
 		driveEntity.setConfigParse(newPojo);
 		driveService.save(driveEntity);
-		return Result.success();
+	}
+
+	@GetAction("token")
+	public void token(String state, String code) throws IOException {
+		save(state, code);
+		found("/admin");
 	}
 }
