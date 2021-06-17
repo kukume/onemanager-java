@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
-@import me.kuku.onemanager.entity.DriveEntity
-@args List<DriveEntity> list
+@import com.alibaba.fastjson.JSONObject
+@args List<JSONObject> list
 <head>
     <meta charset="UTF-8">
     <title>OneManager设置</title>
@@ -12,8 +12,11 @@
     <ul class="nav nav-primary nav-justified">
         <li class="active"><a data-tab href="#index">首页</a></li>
         <li><a data-tab href="#var">平台变量</a></li>
-        @for(DriveEntity entity: list){
-            <li><a data-tab href="#@entity.getName()">@entity.getName()</a></li>
+        @for(JSONObject jsonObject: list){
+            @{
+                String name = jsonObject.getString("name");
+            }
+            <li><a data-tab href="#@name">@name</a></li>
         }
     </ul>
     <div class="tab-content">
@@ -41,10 +44,6 @@
                         <input type="text" class="form-control" id="adminLoginPage" placeholder="如果设置，登录按钮及页面隐藏。管理登录的页面不在是/admin，而是'/此设置的值'">
                     </div>
                     <div class="form-group">
-                        <label for="autoJumpFirstDisk">autoJumpFirstDisk</label>
-                        <input type="text" class="form-control" id="autoJumpFirstDisk" placeholder="用于多个磁盘，如果为1，则自动跳转到第一个磁盘">
-                    </div>
-                    <div class="form-group">
                         <label for="background">background</label>
                         <input type="text" class="form-control" id="background" placeholder="设置一个url作为背景">
                     </div>
@@ -59,10 +58,6 @@
                     <div class="form-group">
                         <label for="customScript">customScript</label>
                         <input type="text" class="form-control" id="customScript" placeholder="<script>，在所有页都会存在，例如放一个http跳转到https">
-                    </div>
-                    <div class="form-group">
-                        <label for="customTheme">customTheme</label>
-                        <input type="text" class="form-control" id="customTheme" placeholder="html格式的主题的url">
                     </div>
                     <div class="form-group">
                         <label for="disableShowThumb">disableShowThumb</label>
@@ -96,15 +91,19 @@
                 </form>
             </div>
         </div>
-        @for(DriveEntity entity: list){
-            <div class="tab-pane fade" id="@entity.getName()">
+        @for(JSONObject jsonObject: list){
+            @{
+                String name = jsonObject.getString("name");
+                String size = jsonObject.getString("size");
+            }
+            <div class="tab-pane fade" id="@name">
                 <div>
                     <div class="form-group">
                         <label for="name">标签</label>
-                        <input type="text" class="form-control" id="name" placeholder="标签" value="@entity.getName()">
+                        <input type="text" class="form-control" id="name" placeholder="标签" value="@name">
                     </div>
                     <button type="submit" class="btn btn-primary">改变标签</button>
-                    <button class="btn btn-primary" onclick="deletePan('@entity.getName()')">删除此盘</button>
+                    <button class="btn btn-primary" onclick="deletePan('@name')">删除此盘</button>
                     <button type="submit" class="btn btn-primary">复制此盘</button>
                     <button type="submit" class="btn btn-primary">重新授权</button>
                     <div class="form-group">
@@ -113,19 +112,7 @@
                     </div>
                     <div class="form-group">
                         <label>diskSpace</label>
-                        <input type="text" class="form-control" disabled value="16.5 TB / 25 TB">
-                    </div>
-                    <div class="form-group">
-                        <label>diskDescription</label>
-                        <input type="text" class="form-control" placeholder="对这个盘的一些描述，随便写，代码不引用这个">
-                    </div>
-                    <div class="form-group">
-                        <label>diskname</label>
-                        <input type="text" class="form-control" placeholder="这个盘你想显示什么名称">
-                    </div>
-                    <div class="form-group">
-                        <label>domain_path</label>
-                        <input type="text" class="form-control" placeholder="使用多个自定义域名时，指定每个域名看到的目录。格式为a1.com:/dirto/path1|b1.com:/path2。">
+                        <input type="text" class="form-control" disabled value="@s().escapeHtml(size)">
                     </div>
                     <div class="form-group">
                         <label>domainforproxy</label>
@@ -138,10 +125,6 @@
                     <div class="form-group">
                         <label>guestup_path</label>
                         <input type="text" class="form-control" placeholder="设置游客上传路径（图床路径），不设置这个值时该目录内容会正常列文件出来，设置后只有上传界面，不显示其中文件（登录后显示）。">
-                    </div>
-                    <div class="form-group">
-                        <label>public_path</label>
-                        <input type="text" class="form-control" placeholder="使用API长链接访问时，显示网盘文件的路径，不设置时默认为根目录。">
                     </div>
                     <button type="submit" class="btn btn-primary">设置</button>
                 </div>

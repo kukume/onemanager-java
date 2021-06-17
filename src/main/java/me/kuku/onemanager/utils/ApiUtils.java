@@ -57,4 +57,13 @@ public class ApiUtils {
     public static String removeLastLine(StringBuilder sb){
         return sb.deleteCharAt(sb.length() - 1).toString();
     }
+
+    public static String parseSize(long size){
+        // k m g t
+        if (size > 1024L * 1024 * 1024 * 1024) return size / 1024 / 1024 / 1024 / 1024 + "TB";
+        else if (size > 1024L * 1024 * 1024) return size / 1024 / 1024 / 1024 + "GB";
+        else if (size > 1024L * 1024) return size / 1024 / 1024 + "MB";
+        else if (size > 1024L) return size / 1024 + "KB";
+        else return size + "B";
+    }
 }

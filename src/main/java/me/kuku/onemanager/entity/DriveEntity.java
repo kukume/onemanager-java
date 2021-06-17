@@ -23,6 +23,8 @@ public class DriveEntity {
 	private DriveType driveType;
 	@Column(length = 30000)
 	private String config;
+	@Column(length = 30000)
+	private String otherConfig;
 
 	public DriveEntity(String name){
 		this.name = name;
@@ -42,6 +44,22 @@ public class DriveEntity {
 
 	public <T> void setConfigParse(T t){
 		this.config = JSON.toJSONString(t);
+	}
+
+	public <T> T getOtherConfigParse(Class<T> clazz){
+		if (otherConfig == null) {
+			try {
+				return clazz.newInstance();
+			} catch (Exception e) {
+				e.printStackTrace();
+				return null;
+			}
+		}
+		else return JSON.parseObject(otherConfig, clazz);
+	}
+
+	public <T> void setOtherConfigParse(T t){
+		this.otherConfig = JSON.toJSONString(t);
 	}
 
 	public static class Dao extends JPADao<Integer, DriveEntity>{}

@@ -13,5 +13,9 @@ public class OnedrivePojo {
 	private String clientSecret;
 	private String accessToken;
 	private String refreshToken;
-	private Integer expires;
+	private Long expires;
+
+	public OnedrivePojo(String accessToken){
+		this.accessToken = accessToken;
+	}
 }

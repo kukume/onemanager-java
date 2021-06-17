@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<!--suppress JSUnresolvedLibraryURL -->
+@import me.kuku.onemanager.pojo.OnedriveItemPojo
+@args List<OnedriveItemPojo> list, String url, List<Map<String, String>> href
+<html lang="zh_cn">
+<head>
+    <meta charset="UTF-8">
+    <title>OneManager</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@@1.0.1/dist/css/mdui.min.css"/>
+</head>
+<body>
+<div class="mdui-container">
+    <div class="mdui-row mdui-shadow-10 mdui-valign mdui-rounded">
+        <h1 class="mdui-center">OneManager</h1>
+    </div>
+    <br/>
+    <br/>
+    <div class="mdui-row mdui-shadow-10">
+        <ul class="mdui-list">
+            <div class="mdui-text-left" style="padding: 16px">
+                @for(Map<String, String> map: href){
+                    <a href='@map.get("url")'>@map.get("name")</a> /
+                }
+            </div>
+            @for(OnedriveItemPojo pojo: list){
+                <a href="@if(pojo.getIsFile()){@pojo.getUrl()}else{@(url + pojo.getName())}">
+                    <li class="mdui-list-item">
+                        @if(!pojo.getIsFile()){
+                            <i class="mdui-list-item-avatar mdui-icon material-icons">folder</i>
+                        }else{
+                            <i class="mdui-list-item-avatar mdui-icon material-icons mdui-color-blue mdui-text-color-white">assignment</i>
+                        }
+                        <div class="mdui-list-item-content">
+                            <div class="mdui-list-item-title">@pojo.getName()</div>
+                            <div class="mdui-list-item-text">@pojo.getCreateTime()</div>
+                        </div>
+                        @me.kuku.onemanager.utils.ApiUtils.parseSize(pojo.getSize())
+                    </li>
+                </a>
+            }
+        </ul>
+    </div>
+</div>
+</body>
+<script src="https://cdn.jsdelivr.net/npm/mdui@@1.0.1/dist/js/mdui.min.js"></script>
+<script>
+    var $ = mdui.$;
+</script>
+</html>

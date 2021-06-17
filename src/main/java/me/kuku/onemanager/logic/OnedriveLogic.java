@@ -17,4 +17,6 @@ public interface OnedriveLogic {
 	boolean upload(OnedrivePojo onedrivePojo, File file, String...path) throws IOException;
 	String uploadBigFile(OnedrivePojo onedrivePojo, String...path) throws IOException;
 	String download(OnedrivePojo onedrivePojo, String...path) throws IOException;
+	OnedriveItemPojo source(OnedrivePojo onedrivePojo, String...path) throws IOException;
+	String size(OnedrivePojo onedrivePojo) throws IOException;
 }

@@ -6,6 +6,7 @@ import me.kuku.onemanager.exception.VerifyFailedException;
 import me.kuku.onemanager.logic.OnedriveLogic;
 import me.kuku.onemanager.pojo.OnedriveItemPojo;
 import me.kuku.onemanager.pojo.OnedrivePojo;
+import me.kuku.onemanager.utils.ApiUtils;
 import me.kuku.onemanager.utils.OkHttpUtils;
 import okhttp3.Headers;
 import okhttp3.Response;
@@ -29,7 +30,8 @@ public class OnedriveLogicImpl implements OnedriveLogic {
 			throw new VerifyFailedException(jsonObject.getString("error_description"));
 		onedrivePojo.setAccessToken(jsonObject.getString("access_token"));
 		onedrivePojo.setRefreshToken(jsonObject.getString("refresh_token"));
-		onedrivePojo.setExpires(jsonObject.getInteger("expires_in"));
+		long ee = System.currentTimeMillis() + (jsonObject.getInteger("expires_in") * 1000L);
+		onedrivePojo.setExpires(ee);
 		return onedrivePojo;
 	}
 
@@ -68,6 +70,7 @@ public class OnedriveLogicImpl implements OnedriveLogic {
 	}
 
 	private String path(String...path){
+		if (path.length == 0 || (path.length == 1 && "".equals(path[0]))) return "root";
 		String ss = StringUtil.join("/", path);
 		return "root:/" + ss + ":";
 	}
@@ -83,12 +86,13 @@ public class OnedriveLogicImpl implements OnedriveLogic {
 		List<OnedriveItemPojo> list = new ArrayList<>();
 		JSONArray jsonArray = jsonObject.getJSONArray("value");
 		jsonArray.stream().map(it -> (JSONObject) it).forEach(it -> {
-			OnedriveItemPojo pojo = new OnedriveItemPojo(it.getString("id"), it.getString("createdDateTime"),
+			OnedriveItemPojo pojo = new OnedriveItemPojo(it.getString("id"), it.getString("name"),
+					it.getString("createdDateTime").replace("T", " ").replace("Z", ""),
 					it.getString("lastModifiedDateTime"), it.getLong("size"));
 			boolean isFile = !it.containsKey("folder");
 			pojo.setIsFile(isFile);
 			if (isFile){
-				pojo.setUrl("@microsoft.graph.downloadUrl");
+				pojo.setUrl(it.getString("@microsoft.graph.downloadUrl"));
 			}
 			list.add(pojo);
 		});
@@ -123,5 +127,32 @@ public class OnedriveLogicImpl implements OnedriveLogic {
 
 		}
 		return "";
+	}
+
+	@Override
+	public OnedriveItemPojo source(OnedrivePojo onedrivePojo, String... path) throws IOException {
+		JSONObject jsonObject = OkHttpUtils.getJson("https://graph.microsoft.com/v1.0/me/drive/" + path(path),
+				authorizationHeaders(onedrivePojo.getAccessToken()));
+		if (jsonObject.containsKey("error")){
+			JSONObject errorJsonObject = jsonObject.getJSONObject("error");
+			throw new VerifyFailedException(errorJsonObject.getString("code") + "：" + errorJsonObject.getString("message"));
+		}
+		if (jsonObject.containsKey("file"))
+			return new OnedriveItemPojo(jsonObject.getString("@microsoft.graph.downloadUrl"), true);
+		else return new OnedriveItemPojo(false);
+	}
+
+	@Override
+	public String size(OnedrivePojo onedrivePojo) throws IOException {
+		JSONObject jsonObject = OkHttpUtils.getJson("https://graph.microsoft.com/v1.0/me/drive",
+				authorizationHeaders(onedrivePojo.getAccessToken()));
+		if (jsonObject.containsKey("error")){
+			JSONObject errorJsonObject = jsonObject.getJSONObject("error");
+			throw new VerifyFailedException(errorJsonObject.getString("code") + "：" + errorJsonObject.getString("message"));
+		}
+		JSONObject quota = jsonObject.getJSONObject("quota");
+		Long total = quota.getLong("total");
+		Long used = quota.getLong("used");
+		return ApiUtils.parseSize(used) + " / " + ApiUtils.parseSize(total);
 	}
 }
