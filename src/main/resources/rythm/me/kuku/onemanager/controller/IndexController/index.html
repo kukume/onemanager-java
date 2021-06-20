@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!--suppress JSUnresolvedLibraryURL -->
+<!--suppress JSUnresolvedLibraryURL, EqualityComparisonWithCoercionJS -->
 @import me.kuku.onemanager.pojo.OnedriveItemPojo
-@args List<OnedriveItemPojo> list, String url, List<Map<String, String>> href
+@args List<OnedriveItemPojo> list, String url, List<Map<String, String>> href, String name, String path, String siteName, String prePath, List<Map<String, String>> driveList
 <html lang="zh_cn">
 <head>
     <meta charset="UTF-8">
@@ -9,42 +9,254 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@@1.0.1/dist/css/mdui.min.css"/>
 </head>
-<body>
+<body class="mdui-appbar-with-toolbar mdui-loaded mdui-theme-accent-pink">
+<header class="mdui-appbar-fixed">
+    <span class="mdui-toolbar">
+    <button id="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></button>
+        <a href="/@name" class="mdui-typo-headline">@siteName</a>
+        @for(Map<String, String> map: href){
+            <i class="mdui-icon material-icons">chevron_right</i>
+            <a href='@map.get("url")' class="mdui-typo-subheading mdui-hidden-xs">@map.get("name")</a>
+        }
+</span>
+</header>
+<div class="mdui-drawer mdui-drawer-close" id="drawer">
+    <ul class="mdui-list">
+        <li class="mdui-list-item mdui-ripple" mdui-dialog="{target: '#login_input'}">
+            <i class="mdui-list-item-icon mdui-icon material-icons">account_circle</i>
+            <div class="mdui-list-item-content">登录</div>
+        </li>
+        <li id="darkColor" class="mdui-list-item mdui-ripple">
+            <i class="mdui-list-item-icon mdui-icon material-icons">brightness_4</i>
+            <div class="mdui-list-item-content">深色模式</div>
+        </li>
+        <li class="mdui-divider"></li>
+        @for(Map<String, String> map: driveList){
+            <a href='@map.get("url")'>
+                <li class='mdui-list-item mdui-ripple @if(name.equals(map.get("name"))){mdui-list-item-active}'>
+                    <i class="mdui-list-item-icon mdui-icon material-icons">cloud</i>
+                    <div class="mdui-list-item-content">@map.get("name")</div>
+                </li>
+            </a>
+        }
+        <li class="mdui-divider"></li>
+        <a href="https://github.com/kukume/onemanager">
+            <li class="mdui-list-item mdui-ripple">
+                <i class="mdui-list-item-icon mdui-icon material-icons">code</i>
+                <div class="mdui-list-item-content">Github</div>
+            </li>
+        </a>
+    </ul>
+</div>
 <div class="mdui-container">
-    <div class="mdui-row mdui-shadow-10 mdui-valign mdui-rounded">
-        <h1 class="mdui-center">OneManager</h1>
+    <div class="mdui-dialog" id="dialog">
+        <div class="mdui-dialog-content">上传成功！</div>
+        <div class="mdui-dialog-actions">
+            <button class="mdui-btn mdui-ripple" mdui-dialog-confirm>确定</button>
+        </div>
+    </div>
+    <div class="mdui-dialog" id="wait">
+        <div class="mdui-dialog-content">等待中！</div>
+    </div>
+    <div class="mdui-dialog" id="login_input">
+        <div class="mdui-dialog-title">登录</div>
+        <div class="mdui-dialog-content">
+            <div class="mdui-textfield mdui-textfield-floating-label">
+                <i class="mdui-icon material-icons">lock</i><label class="mdui-textfield-label">密码</label><input class="mdui-textfield-input" type="password" >
+            </div>
+        </div>
+        <div class="mdui-dialog-actions">
+            <button class="mdui-btn mdui-ripple" mdui-dialog-close>取消</button>
+            <button id="login_btn" class="mdui-btn mdui-ripple">登录</button>
+        </div>
     </div>
     <br/>
     <br/>
-    <div class="mdui-row mdui-shadow-10">
+    <div class="mdui-shadow-3" style="border-radius: 8px">
         <ul class="mdui-list">
-            <div class="mdui-text-left" style="padding: 16px">
-                @for(Map<String, String> map: href){
-                    <a href='@map.get("url")'>@map.get("name")</a> /
-                }
-            </div>
+            <li class="mdui-list-item mdui-ripple">
+                <div class="mdui-row mdui-col-xs-12">
+                    <div class="mdui-col-xs-12 mdui-col-sm-7">文件</div>
+                    <div class="mdui-col-sm-3 mdui-text-right">修改时间</div>
+                    <div class="mdui-col-sm-2 mdui-text-right">大小</div>
+                </div>
+            </li>
+            @if(prePath != null && !"".equals(prePath)){
+                <li class="mdui-list-item mdui-ripple back">
+                    <div class="mdui-row mdui-col-sm-12">
+                        <a href="@prePath">
+                            <div class="mdui-col-xs-7">
+                                <i class="mdui-icon material-icons">arrow_upward</i>
+                            </div>
+                            <div class="mdui-col-xs-3 mdui-text-right"></div>
+                            <div class="mdui-col-xs-2 mdui-text-right"></div>
+                        </a>
+                    </div>
+                </li>
+            }
             @for(OnedriveItemPojo pojo: list){
-                <a href="@if(pojo.getIsFile()){@pojo.getUrl()}else{@(url + pojo.getName())}">
-                    <li class="mdui-list-item">
-                        @if(!pojo.getIsFile()){
-                            <i class="mdui-list-item-avatar mdui-icon material-icons">folder</i>
-                        }else{
-                            <i class="mdui-list-item-avatar mdui-icon material-icons mdui-color-blue mdui-text-color-white">assignment</i>
-                        }
-                        <div class="mdui-list-item-content">
-                            <div class="mdui-list-item-title">@pojo.getName()</div>
-                            <div class="mdui-list-item-text">@pojo.getCreateTime()</div>
+                <li class="mdui-list-item">
+<!--                    <i class="mdui-icon material-icons" mdui-menu="{target: '#@pojo.getId()', 'subMenuTrigger': 'hover'}">settings</i>-->
+                    <div class="mdui-row mdui-col-sm-12">
+                        <div class="mdui-col-xs-12 mdui-col-sm-7">
+                            <ul class="mdui-menu mdui-menu-cascade" id="@pojo.getId()">
+                                @if(!pojo.getIsFile()){
+                                <li class="mdui-menu-item">
+                                    <a href="javascript:lockItem('@path' + '/@pojo.getName()');" class="mdui-ripple">
+                                        <i class="mdui-menu-item-icon mdui-icon material-icons">lock</i>
+                                        加密</a>
+                                </li>
+                                }
+                                <li class="mdui-menu-item">
+                                    <a href="javascript:renameItem('@pojo.getId()');" class="mdui-ripple">
+                                        <i class="mdui-menu-item-icon mdui-icon material-icons">edit</i>
+                                        重命名</a>
+                                </li>
+                                <li class="mdui-menu-item">
+                                    <a href="javascript:deleteItem('@pojo.getId()');" class="mdui-ripple">
+                                        <i class="mdui-menu-item-icon mdui-icon material-icons">delete</i>删除</a>
+                                </li>
+                            </ul>
+                            @if(!pojo.getIsFile()){
+                                <i class="mdui-icon material-icons" mdui-menu="{target: '#@pojo.getId()', 'subMenuTrigger': 'hover'}">folder_open</i>
+                            }else{
+                                <i class="mdui-icon material-icons" mdui-menu="{target: '#@pojo.getId()', 'subMenuTrigger': 'hover'}">insert_drive_file</i>
+                            }
+                            <a href="@if(pojo.getIsFile()){@pojo.getUrl()}else{@(url + pojo.getName())}">
+                                @pojo.getName()
+                            </a>
                         </div>
-                        @me.kuku.onemanager.utils.ApiUtils.parseSize(pojo.getSize())
-                    </li>
-                </a>
+                        <div class="mdui-col-sm-3 mdui-text-right">
+                            @pojo.getLastModifiedTime()
+                        </div>
+                        <div class="mdui-col-sm-2 mdui-text-right">
+                            @me.kuku.onemanager.utils.ApiUtils.parseSize(pojo.getSize())
+                        </div>
+                    </div>
+                </li>
             }
         </ul>
+    </div>
+    <br/>
+    <br/>
+    <div class="mdui-row mdui-text-center" style="display: none">
+        <input id="upload" class="mdui-textfield" type="file">
+    </div>
+    <div class="mdui-fab-wrapper" id="exampleFab" mdui-fab="{trigger: 'hover'}">
+        <button class="mdui-fab mdui-ripple mdui-color-theme-accent">
+            <!-- 默认显示的图标 -->
+            <i class="mdui-icon material-icons">add</i>
+
+            <!-- 在拨号菜单开始打开时，平滑切换到该图标，若不需要切换图标，则可以省略该元素 -->
+            <i class="mdui-icon mdui-fab-opened material-icons">add</i>
+        </button>
+        <div class="mdui-fab-dial">
+            <button id="uploadBtn" class="mdui-fab mdui-fab-mini mdui-ripple mdui-color-pink"><i class="mdui-icon material-icons">cloud_upload</i></button>
+            <button onclick="lockItem('@path')" class="mdui-fab mdui-fab-mini mdui-ripple mdui-color-red"><i class="mdui-icon material-icons">lock</i></button>
+        </div>
     </div>
 </div>
 </body>
 <script src="https://cdn.jsdelivr.net/npm/mdui@@1.0.1/dist/js/mdui.min.js"></script>
 <script>
     var $ = mdui.$;
+    $("#upload").on('change', function () {
+        var inst = new mdui.Dialog('#wait')
+        inst.open()
+        $.ajax({
+            url: "/onedrive/upload",
+            data: {
+                "name": '@name',
+                "path": "@path" + "/" + document.getElementById("upload").files[0].name
+            },
+            method: 'post',
+            success: function (data) {
+                let uploadUrl = JSON.parse(data).data.url
+                let file = document.getElementById("upload").files[0]
+                let allSize = file.size + ''
+                let size = (file.size - 1) + ""
+                let range = "bytes 0-" + size  + "/" + allSize
+                $.ajax({
+                    url: uploadUrl,
+                    contentType: 'application/octet-stream',
+                    data: file,
+                    // processData: false,
+                    // contentType: false,
+                    headers: {
+                        "Content-Range": range
+                    },
+                    method: 'put',
+                    success: function (data) {
+                        inst.close()
+                        var success = new mdui.Dialog('#dialog')
+                        success.open()
+                    }
+                })
+            }
+        })
+    })
+    $("#uploadBtn").on('click', function () {
+        $("#upload")[0].click()
+    })
+    var leftInst = new mdui.Drawer('#drawer');
+    $("#menu").on('click', function () {
+        leftInst.toggle()
+    })
+    $("#darkColor").on('click', function () {
+        let body = $("body")
+        let cl = body.attr('class')
+        if (cl.search('mdui-theme-layout-dark') != -1)
+            body.attr('class', cl.replace('mdui-theme-layout-dark', ''))
+        else body.attr('class', cl += ' mdui-theme-layout-dark')
+    })
+    function deleteItem(id) {
+        $.ajax({
+            url: "/onedrive/remove",
+            method: "post",
+            data: {
+                "itemId": id,
+                "name": '@name'
+            },
+            success: function (data) {
+                if (JSON.parse(data).code == 200) mdui.alert('删除成功')
+                else mdui.alert('删除失败')
+            }
+        })
+    }
+    function renameItem(id) {
+        mdui.prompt('请输入该文件的新名称', function (val) {
+            $.ajax({
+                url: "/onedrive/rename",
+                method: "post",
+                data: {
+                    "itemId": id,
+                    "name": '@name',
+                    "newName": val
+                },
+                success: function (data) {
+                    if (JSON.parse(data).code == 200) mdui.alert('重命名成功')
+                    else mdui.alert('重命名失败')
+                }
+            })
+        })
+    }
+    function lockItem(path) {
+        mdui.prompt('请输入加密该文件夹的密码', function (val) {
+            $.ajax({
+                url: "/onedrive/lock",
+                method: 'post',
+                data: {
+                    "path": path,
+                    "name": '@name',
+                    "password": val
+                },
+                success: function (data) {
+                    let json = JSON.parse(data)
+                    if (json.code == 200) mdui.alert('加密成功')
+                    else mdui.alert(json.message)
+                }
+            })
+        })
+    }
 </script>
 </html>

@@ -15,8 +15,11 @@ public interface OnedriveLogic {
 	OnedrivePojo refreshToken(OnedrivePojo onedrivePojo) throws IOException;
 	List<OnedriveItemPojo> listFile(OnedrivePojo onedrivePojo, String...path) throws IOException;
 	boolean upload(OnedrivePojo onedrivePojo, File file, String...path) throws IOException;
+	boolean upload(OnedrivePojo onedrivePojo, byte[] bytes, String...path) throws IOException;
 	String uploadBigFile(OnedrivePojo onedrivePojo, String...path) throws IOException;
 	String download(OnedrivePojo onedrivePojo, String...path) throws IOException;
 	OnedriveItemPojo source(OnedrivePojo onedrivePojo, String...path) throws IOException;
 	String size(OnedrivePojo onedrivePojo) throws IOException;
+	boolean delete(OnedrivePojo onedrivePojo, String itemId) throws IOException;
+	boolean rename(OnedrivePojo onedrivePojo, String itemId, String newName) throws IOException;
 }

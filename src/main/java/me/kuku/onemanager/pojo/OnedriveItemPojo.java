@@ -16,21 +16,30 @@ public class OnedriveItemPojo {
 	private String url;
 	private Boolean isFile;
 
+	public void setCreateTime(String createTime) {
+		this.createTime = createTime.replace("T", " ").replace("Z", "");
+	}
+
+	public void setLastModifiedTime(String lastModifiedTime) {
+		this.lastModifiedTime = lastModifiedTime.replace("T", " ").replace("Z", "");;
+	}
 
 	public OnedriveItemPojo(String id, String name, String createTime, String lastModifiedTime, Long size){
 		this.id = id;
 		this.name = name;
-		this.createTime = createTime;
-		this.lastModifiedTime = lastModifiedTime;
+		this.createTime = createTime.replace("T", " ").replace("Z", "");
+		this.lastModifiedTime = lastModifiedTime.replace("T", " ").replace("Z", "");
 		this.size = size;
 	}
 
-	public OnedriveItemPojo(String url, Boolean isFile){
+	public OnedriveItemPojo(String id, String url, Boolean isFile){
+		this.id = id;
 		this.url = url;
 		this.isFile = isFile;
 	}
 
-	public OnedriveItemPojo(Boolean isFile){
+	public OnedriveItemPojo(String id, Boolean isFile){
+		this.id = id;
 		this.isFile = isFile;
 	}
 }

@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!--suppress EqualityComparisonWithCoercionJS -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -17,14 +18,14 @@
             <div class="form-group">
                 <div class="radio">
                     <label>
-                        <input type="radio" name="onedriveType" value="0" checked>MS: 国际版（商业版与个人版）
+                        <input type="radio" name="onedriveType" value="0">MS: 国际版（商业版与个人版）
                     </label>
                 </div>
-                <div id="odInner" style="margin-left: 35px">
+                <div id="odInner" style="margin-left: 35px; display: none;">
                     <input type="checkbox" id="odBtn">用自己申请的应用ID与机密，不用OneManager默认的
                     <div id="odClient" style="display: none">
                         <label for="odClientId">return_uri(Reply URL)</label><br/>
-                        <label for="odClientId">https://scfonedrive.github.io/</label>
+                        <label for="odClientId">您的域名/onedrive/token</label>
                         <div class="form-group">
                             <label for="odClientId">client_id</label>
                             <input type="text" class="form-control" id="odClientId" placeholder="">
@@ -39,6 +40,21 @@
                     <label>
                         <input type="radio" name="onedriveType" value="1">CN: 世纪互联版
                     </label>
+                </div>
+                <div id="odCnInner" style="margin-left: 35px; display: none;">
+                    <input type="checkbox" id="odCnBtn">用自己申请的应用ID与机密，不用OneManager默认的
+                    <div id="odCnClient" style="display: none">
+                        <label for="odClientId">return_uri(Reply URL)</label><br/>
+                        <label for="odClientId">您的域名/onedrive/token</label>
+                        <div class="form-group">
+                            <label for="odClientId">client_id</label>
+                            <input type="text" class="form-control" id="odCnClientId" placeholder="">
+                        </div>
+                        <div class="form-group">
+                            <label for="odClientSecret">client_secret</label>
+                            <input type="text" class="form-control" id="odCnClientSecret" placeholder="">
+                        </div>
+                    </div>
                 </div>
 <!--                <div class="radio">-->
 <!--                    <label>-->
@@ -57,14 +73,24 @@
     $(document).ready(function () {
         $("input[name=onedriveType]").click(function () {
             let value = $(this).val()
-            if (value === 0){
+            if (value == 0){
                 $("#odInner").show()
+                $("#odCnInner").hide()
+            }
+            if (value == 1){
+                $("#odCnInner").show()
+                $("#odInner").hide()
             }
         })
         $("#odBtn").click(function () {
             let is = $(this).is(':checked')
             if(is) $("#odClient").show()
             else $("#odClient").hide()
+        })
+        $("#odCnBtn").click(function () {
+            let is = $(this).is(':checked')
+            if(is) $("#odCnClient").show()
+            else $("#odCnClient").hide()
         })
         $("#confirm").click(function () {
             let name = $("#name").val()

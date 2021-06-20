@@ -87,7 +87,7 @@ public class OnedriveLogicImpl implements OnedriveLogic {
 		JSONArray jsonArray = jsonObject.getJSONArray("value");
 		jsonArray.stream().map(it -> (JSONObject) it).forEach(it -> {
 			OnedriveItemPojo pojo = new OnedriveItemPojo(it.getString("id"), it.getString("name"),
-					it.getString("createdDateTime").replace("T", " ").replace("Z", ""),
+					it.getString("createdDateTime"),
 					it.getString("lastModifiedDateTime"), it.getLong("size"));
 			boolean isFile = !it.containsKey("folder");
 			pojo.setIsFile(isFile);
@@ -103,6 +103,14 @@ public class OnedriveLogicImpl implements OnedriveLogic {
 	public boolean upload(OnedrivePojo onedrivePojo, File file, String... path) throws IOException {
 		Response response = OkHttpUtils.put("https://graph.microsoft.com/v1.0/me/drive/" + path(path) + "/content",
 				OkHttpUtils.getStreamBody(file), authorizationHeaders(onedrivePojo.getAccessToken()));
+		JSONObject jsonObject = OkHttpUtils.getJson(response);
+		return !jsonObject.containsKey("error");
+	}
+
+	@Override
+	public boolean upload(OnedrivePojo onedrivePojo, byte[] bytes, String... path) throws IOException {
+		Response response = OkHttpUtils.put("https://graph.microsoft.com/v1.0/me/drive/" + path(path) + "/content",
+				OkHttpUtils.getStreamBody(bytes), authorizationHeaders(onedrivePojo.getAccessToken()));
 		JSONObject jsonObject = OkHttpUtils.getJson(response);
 		return !jsonObject.containsKey("error");
 	}
@@ -137,9 +145,11 @@ public class OnedriveLogicImpl implements OnedriveLogic {
 			JSONObject errorJsonObject = jsonObject.getJSONObject("error");
 			throw new VerifyFailedException(errorJsonObject.getString("code") + "：" + errorJsonObject.getString("message"));
 		}
-		if (jsonObject.containsKey("file"))
-			return new OnedriveItemPojo(jsonObject.getString("@microsoft.graph.downloadUrl"), true);
-		else return new OnedriveItemPojo(false);
+		String id = jsonObject.getString("id");
+		return new OnedriveItemPojo(id, jsonObject.getString("name"),
+				jsonObject.getString("createdDateTime"), jsonObject.getString("lastModifiedDateTime"),
+				jsonObject.getLong("size"), jsonObject.getString("@microsoft.graph.downloadUrl"),
+				jsonObject.containsKey("file"));
 	}
 
 	@Override
@@ -154,5 +164,23 @@ public class OnedriveLogicImpl implements OnedriveLogic {
 		Long total = quota.getLong("total");
 		Long used = quota.getLong("used");
 		return ApiUtils.parseSize(used) + " / " + ApiUtils.parseSize(total);
+	}
+
+	@Override
+	public boolean delete(OnedrivePojo onedrivePojo, String itemId) throws IOException {
+		Response response = OkHttpUtils.delete("https://graph.microsoft.com/v1.0/me/drive/items/" + itemId,
+				new HashMap<>(), authorizationHeaders(onedrivePojo.getAccessToken()));
+		response.close();
+		return response.code() == 204;
+	}
+
+	@Override
+	public boolean rename(OnedrivePojo onedrivePojo, String itemId, String newName) throws IOException {
+		JSONObject params = new JSONObject();
+		params.put("name", newName);
+		Response response = OkHttpUtils.patch("https://graph.microsoft.com/v1.0/me/drive/items/" + itemId,
+				OkHttpUtils.addJson(params.toJSONString()), authorizationHeaders(onedrivePojo.getAccessToken()));
+		JSONObject jsonObject = OkHttpUtils.getJson(response);
+		return jsonObject.containsKey("id");
 	}
 }

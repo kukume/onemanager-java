@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
-@import com.alibaba.fastjson.JSONObject
-@args List<JSONObject> list
+@import com.alibaba.fastjson.JSONObject,me.kuku.onemanager.entity.SystemConfigEntity
+@args List<JSONObject> list, Map<String, SystemConfigEntity> systemConfigMap
 <head>
     <meta charset="UTF-8">
     <title>OneManager设置</title>
     <link rel="stylesheet" href="//cdn.bootcss.com/zui/1.9.2/css/zui.min.css">
+    <link rel="stylesheet" href="//cdn.bootcss.com/zui/1.9.2/lib/bootbox/bootbox.min.css">
 </head>
 <body>
 <div class="container">
@@ -21,7 +22,7 @@
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="index">
-            <div class="row">
+            <div>
                 <br/>
                 <form class="form">
                     <div class="form-group">
@@ -36,59 +37,47 @@
             </div>
         </div>
         <div class="tab-pane fade" id="var">
-            <div class="row">
+            <div>
                 <br/>
-                <form>
+                <div>
                     <div class="form-group">
                         <label for="adminLoginPage">adminloginpage</label>
-                        <input type="text" class="form-control" id="adminLoginPage" placeholder="如果设置，登录按钮及页面隐藏。管理登录的页面不在是/admin，而是'/此设置的值'">
+                        <input type="text" class="form-control" id="adminLoginPage" value='@systemConfigMap.get("adminLoginPage")?.getContent()' placeholder="如果设置，登录按钮及页面隐藏。管理登录的页面不在是/admin，而是'/此设置的值'">
                     </div>
                     <div class="form-group">
                         <label for="background">background</label>
-                        <input type="text" class="form-control" id="background" placeholder="设置一个url作为背景">
+                        <input type="text" class="form-control" id="background" value='@systemConfigMap.get("background")?.getContent()' placeholder="设置一个url作为背景">
                     </div>
                     <div class="form-group">
                         <label for="backgroundM">backgroundm</label>
-                        <input type="text" class="form-control" id="backgroundM" placeholder="设置一个url作为手机端用的背景">
+                        <input type="text" class="form-control" id="backgroundM" value='@systemConfigMap.get("backgroundM")?.getContent()' placeholder="设置一个url作为手机端用的背景">
                     </div>
                     <div class="form-group">
                         <label for="customCss">customCss</label>
-                        <input type="text" class="form-control" id="customCss" placeholder="<style>，在<head>最后面">
+                        <input type="text" class="form-control" id="customCss" value='@systemConfigMap.get("customCss")?.getContent()' placeholder="<style>，在<head>最后面">
                     </div>
                     <div class="form-group">
                         <label for="customScript">customScript</label>
-                        <input type="text" class="form-control" id="customScript" placeholder="<script>，在所有页都会存在，例如放一个http跳转到https">
-                    </div>
-                    <div class="form-group">
-                        <label for="disableShowThumb">disableShowThumb</label>
-                        <input type="text" class="form-control" id="disableShowThumb" placeholder="如果填1，显示缩略按钮将被隐藏">
-                    </div>
-                    <div class="form-group">
-                        <label for="dontBasicAuth">dontBasicAuth</label>
-                        <input type="text" class="form-control" id="dontBasicAuth" placeholder="如果为1，加密目录不再弹出用户名和密码窗口，只会显示主题自带的页面">
-                    </div>
-                    <div class="form-group">
-                        <label for="forceHttps">forceHttps</label>
-                        <input type="text" class="form-control" id="forceHttps" placeholder="0或1，如果为1会强制跳转到https">
+                        <input type="text" class="form-control" id="customScript" value='@systemConfigMap.get("customScript")?.getContent()'  placeholder="<script>，在所有页都会存在，例如放一个http跳转到https">
                     </div>
                     <div class="form-group">
                         <label for="hideFunctionalityFile">hideFunctionalityFile</label>
-                        <input type="text" class="form-control" id="hideFunctionalityFile" placeholder="0 或 1。如果 1, 某些文件不列表给游客看，但它的功能正常，比如readme.md">
+                        <input type="text" class="form-control" id="hideFunctionalityFile" value='@systemConfigMap.get("hideFunctionalityFile")?.getContent()' placeholder="0 或 1。如果 1, 某些文件不列表给游客看，但它的功能正常，比如readme.md">
                     </div>
                     <div class="form-group">
                         <label for="passFile">passfile</label>
-                        <input type="text" class="form-control" id="passFile" placeholder="自定义密码文件的名字，可以是'pppppp'，也可以是'aaaa.txt'等等；列目录时不会显示，只有知道密码才能查看或下载此文件。密码是这个文件的内容，可以空格、可以中文；">
+                        <input type="text" class="form-control" id="passFile" value='@systemConfigMap.get("passwordFile")?.getContent()' placeholder="自定义密码文件的名字，可以是'pppppp'，也可以是'aaaa.txt'等等；列目录时不会显示，只有知道密码才能查看或下载此文件。密码是这个文件的内容，可以空格、可以中文；">
                     </div>
                     <div class="form-group">
                         <label for="referrer">referrer</label>
-                        <input type="text" class="form-control" id="referrer" placeholder="只有这些域名能引用本站资源。格式为a1.com|b1.com">
+                        <input type="text" class="form-control" id="referrer" value='@systemConfigMap.get("referrer")?.getContent()' placeholder="只有这些域名能引用本站资源。格式为a1.com|b1.com">
                     </div>
                     <div class="form-group">
                         <label for="siteName">siteName</label>
-                        <input type="text" class="form-control" id="siteName" placeholder="网站的名称">
+                        <input type="text" class="form-control" id="siteName" value='@systemConfigMap.get("siteName")?.getContent()' placeholder="网站的名称">
                     </div>
-                    <button type="submit" class="btn btn-primary">设置</button>
-                </form>
+                    <button type="submit" id="systemSettingBtn" class="btn btn-primary">设置</button>
+                </div>
             </div>
         </div>
         @for(JSONObject jsonObject: list){
@@ -135,10 +124,26 @@
 </body>
 <script src="//cdn.bootcss.com/zui/1.9.2/lib/jquery/jquery.js"></script>
 <script src="//cdn.bootcss.com/zui/1.9.2/js/zui.min.js"></script>
+<script src="//cdn.bootcss.com/zui/1.9.2/lib/bootbox/bootbox.min.js"></script>
 <script>
     $(document).ready(function () {
         $("#driveType").change(function () {
             $("#driveTypeBtn").attr("href", this.value)
+        })
+        $("#systemSettingBtn").click(function () {
+            $.post("/admin/systemConfigSetting", {
+                "adminLoginPage": $("#adminLoginPage").val(),
+                "passwordFile": $("#passFile").val(),
+                "background": $("#background").val(),
+                "backgroundM": $("#backgroundM").val(),
+                "customCss": $("#customCss").val(),
+                "customScript": $("#customScript").val(),
+                "hideFunctionalityFile": $("#hideFunctionalityFile").val(),
+                "referrer": $("#referrer").val(),
+                "siteName": $("#siteName").val()
+            }, function (data) {
+                bootbox.alert("保存成功！");
+            })
         })
     })
     function deletePan(name) {

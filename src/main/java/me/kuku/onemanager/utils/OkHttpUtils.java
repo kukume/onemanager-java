@@ -96,6 +96,23 @@ public class OkHttpUtils {
         return delete(url, map, emptyHeaders());
     }
 
+    public static Response patch(String url, RequestBody requestBody, Headers headers) throws IOException {
+        Request request = new Request.Builder().url(url).patch(requestBody).headers(headers).build();
+        return okHttpClient.newCall(request).execute();
+    }
+
+    public static Response patch(String url, RequestBody requestBody) throws IOException {
+        return patch(url, requestBody, emptyHeaders());
+    }
+
+    public static Response patch(String url, Map<String, String> map, Headers headers) throws IOException {
+        return patch(url, mapToFormBody(map), headers);
+    }
+
+    public static Response patch(String url, Map<String, String> map) throws IOException {
+        return patch(url, map, emptyHeaders());
+    }
+
     public static String getStr(Response response) throws IOException {
         return Objects.requireNonNull(response.body()).string();
     }
