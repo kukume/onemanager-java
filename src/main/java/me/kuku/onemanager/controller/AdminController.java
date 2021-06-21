@@ -1,6 +1,7 @@
 package me.kuku.onemanager.controller;
 
 import act.controller.annotation.UrlContext;
+import act.db.DbBind;
 import act.db.sql.tx.Transactional;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -10,6 +11,7 @@ import me.kuku.onemanager.exception.VerifyFailedException;
 import me.kuku.onemanager.logic.OnedriveLogic;
 import me.kuku.onemanager.pojo.OnedrivePojo;
 import me.kuku.onemanager.pojo.Result;
+import me.kuku.onemanager.pojo.ResultStatus;
 import me.kuku.onemanager.pojo.SystemConfigType;
 import me.kuku.onemanager.service.DriveService;
 import me.kuku.onemanager.service.SystemConfigService;
@@ -23,8 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static act.controller.Controller.Util.render;
-
 @UrlContext("/admin")
 public class AdminController {
 
@@ -36,7 +36,7 @@ public class AdminController {
 	private SystemConfigService systemConfigService;
 
 	@GetAction
-	public void index(){
+	public Map<String, Object> index(){
 		List<DriveEntity> findList = driveService.findAll();
 		List<JSONObject> list = findList.stream().map(JSON::toJSONString).map(JSON::parseObject).peek(it -> {
 			try {
@@ -47,7 +47,7 @@ public class AdminController {
 					size = onedriveLogic.size(new OnedrivePojo(jsonObject.getString("accessToken")));
 				} catch (VerifyFailedException e) {
 					e.printStackTrace();
-					size = "0 / 0";
+					size = "AccessToken已失效";
 				}
 				it.put("size", size);
 			} catch (IOException e) {
@@ -58,7 +58,10 @@ public class AdminController {
 		systemConfigService.findAll().forEach(it -> {
 			systemConfigMap.put(it.getSystemConfigType().getType(), it);
 		});
-		render(list, systemConfigMap);
+		Map<String, Object> map = new HashMap<>();
+		map.put("list", list);
+		map.put("systemConfigMap", systemConfigMap);
+		return map;
 	}
 
 	@PostAction("delpan")
@@ -83,5 +86,26 @@ public class AdminController {
 			}
 		}
 		return Result.success();
+	}
+
+	@PostAction("editName")
+	@Transactional
+	public Result<?> editName(@DbBind(value = "name", field = "name") DriveEntity driveEntity, String value){
+		if (driveEntity != null){
+			DriveEntity newEntity = driveService.findByName(value);
+			if (newEntity != null) return Result.failure("要更改的名称已存在，更改失败！");
+			driveEntity.setName(value);
+			driveService.save(driveEntity);
+			return Result.success("修改成功！", null);
+		}else return Result.failure(ResultStatus.DATA_NOT_EXISTS);
+	}
+
+	@PostAction("reAuth")
+	public Result<?> reAuth(@DbBind(value = "name", field = "name") DriveEntity driveEntity){
+		if (driveEntity != null){
+			OnedrivePojo onedrivePojo = driveEntity.getConfigParse(OnedrivePojo.class);
+			String url = onedriveLogic.authorizationUrl(onedrivePojo, driveEntity.getName());
+			return Result.success(Result.map("url", url));
+		}else return Result.failure(ResultStatus.DATA_NOT_EXISTS);
 	}
 }

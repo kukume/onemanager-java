@@ -10,7 +10,10 @@ import me.kuku.onemanager.pojo.OnedrivePojo;
 import me.kuku.onemanager.pojo.SystemConfigType;
 import me.kuku.onemanager.service.DriveService;
 import me.kuku.onemanager.service.SystemConfigService;
+import me.kuku.onemanager.utils.MD5Utils;
+import me.kuku.onemanager.utils.OkHttpUtils;
 import org.osgl.http.H;
+import org.osgl.mvc.annotation.Action;
 import org.osgl.mvc.annotation.Before;
 import org.osgl.mvc.annotation.GetAction;
 
@@ -59,9 +62,9 @@ public class IndexController {
 		return new ArrayList<>();
 	}
 
-	@GetAction("/{name}/...")
+	@Action(value = "/{name}/...", methods = {H.Method.GET, H.Method.POST})
 	@CacheFor
-	public Object index(String name, String __path, H.Request<?> req) throws IOException {
+	public Object index(String name, String __path, H.Request<?> req, H.Cookie passwordCookie, H.Response<?> resp, String password) throws IOException {
 		List<DriveEntity> driveEntityList = driveService.findAll();
 		List<DriveEntity> resultList = driveEntityList.stream().filter(it -> it.getName().equals(name)).collect(Collectors.toList());
 		if (resultList.size() != 0){
@@ -69,10 +72,15 @@ public class IndexController {
 			String[] paths = __path.split("/");
 			OnedriveItemPojo pojo = onedriveLogic.source(onedrivePojo, paths);
 			if (pojo.getIsFile()) return moved(pojo.getUrl());
-			List<OnedriveItemPojo> list = onedriveLogic.listFile(onedrivePojo, paths);
 			Map<String, Object> map = new HashMap<>();
-			map.put("list", list);
-			map.put("url", "/" + name + "/" + __path);
+			List<Map<String, String>> driveList = driveEntityList.stream().map(it -> {
+				Map<String, String> resultMap = new HashMap<>();
+				resultMap.put("name", it.getName());
+				resultMap.put("url", "/" + it.getName());
+				return resultMap;
+			}).collect(Collectors.toList());
+			map.put("driveList", driveList);
+			map.put("name", name);
 			List<Map<String, String>> hrefList = new ArrayList<>();
 			StringBuilder sb = new StringBuilder("/").append(name).append("/");
 			for (String path: paths){
@@ -84,23 +92,48 @@ public class IndexController {
 				hrefList.add(href);
 			}
 			map.put("href", hrefList);
-			map.put("name", name);
-			map.put("path", __path);
 			String contextPath = req.path();
-			if (!contextPath.equals("/" + name + "/")){
+			Map<SystemConfigType, SystemConfigEntity> typeMap = systemConfigService.findByTypeIn(SystemConfigType.SITE_NAME, SystemConfigType.PASSWORD_FILE);
+			SystemConfigEntity entity = typeMap.get(SystemConfigType.SITE_NAME);
+			String siteName = entity == null ? "OneManager": entity.getContent();
+			map.put("siteName", siteName);
+			List<OnedriveItemPojo> list = onedriveLogic.listFile(onedrivePojo, paths);
+			SystemConfigEntity passwordFileEntity = typeMap.get(SystemConfigType.PASSWORD_FILE);
+			if (passwordFileEntity != null){
+				String passwordFileName = passwordFileEntity.getContent();
+				OnedriveItemPojo passwordItemPojo = null;
+				for (OnedriveItemPojo onedriveItemPojo : list) {
+					if (onedriveItemPojo.getIsFile() && onedriveItemPojo.getName().equals(passwordFileName))
+						passwordItemPojo = onedriveItemPojo;
+				}
+				if (passwordItemPojo != null){
+					String itemPassword = OkHttpUtils.getStr(passwordItemPojo.getUrl());
+					boolean needPassword = true;
+					if (password != null){
+						if (password.equals(itemPassword)){
+							needPassword = false;
+							resp.addCookie(new H.Cookie("password", MD5Utils.toMD5(password), contextPath));
+						}
+					}else {
+						if (passwordCookie != null && passwordCookie.value().equals(MD5Utils.toMD5(itemPassword)))
+							needPassword = false;
+					}
+					map.put("needPassword", needPassword);
+					if (needPassword) return map;
+					list = list.stream().filter(it-> !it.getName().equals(passwordFileName)).collect(Collectors.toList());
+				}
+			}
+			map.put("list", list);
+			if (contextPath.charAt(contextPath.length() - 1) != '/')
+				contextPath += "/";
+			map.put("url", contextPath);
+			map.put("path", __path);
+			if (!contextPath.equals("/" + name) && !contextPath.equals("/" + name + "/")){
+				if (contextPath.charAt(contextPath.length() - 1) == '/')
+					contextPath = contextPath.substring(0, contextPath.length() - 2);
 				String prePath = contextPath.substring(0, contextPath.lastIndexOf('/') + 1);
 				map.put("prePath", prePath);
 			}
-			SystemConfigEntity entity = systemConfigService.findByType(SystemConfigType.SITE_NAME);
-			String siteName = entity == null ? "OneManager": entity.getContent();
-			map.put("siteName", siteName);
-			List<Map<String, String>> driveList = driveEntityList.stream().map(it -> {
-				Map<String, String> resultMap = new HashMap<>();
-				resultMap.put("name", it.getName());
-				resultMap.put("url", "/" + it.getName());
-				return resultMap;
-			}).collect(Collectors.toList());
-			map.put("driveList", driveList);
 			return map;
 		}
 		return new ArrayList<>();

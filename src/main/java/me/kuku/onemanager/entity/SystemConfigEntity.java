@@ -24,5 +24,5 @@ public class SystemConfigEntity {
 		this.systemConfigType = systemConfigType;
 	}
 
-	public static class Dao extends JPADao<Integer, SystemConfigEntity>{}
+	public static class Dao extends JPADao<Integer, SystemConfigEntity> {}
 }

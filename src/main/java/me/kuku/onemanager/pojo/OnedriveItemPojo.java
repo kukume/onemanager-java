@@ -15,6 +15,7 @@ public class OnedriveItemPojo {
 	private Long size;
 	private String url;
 	private Boolean isFile;
+	private String mimeType;
 
 	public void setCreateTime(String createTime) {
 		this.createTime = createTime.replace("T", " ").replace("Z", "");
@@ -30,6 +31,10 @@ public class OnedriveItemPojo {
 		this.createTime = createTime.replace("T", " ").replace("Z", "");
 		this.lastModifiedTime = lastModifiedTime.replace("T", " ").replace("Z", "");
 		this.size = size;
+	}
+
+	public OnedriveItemPojo(String id, String name, String createTime, String lastModifiedTime, Long size, String url, Boolean isFile){
+		this(id, name, createTime, lastModifiedTime, size, url, isFile, null);
 	}
 
 	public OnedriveItemPojo(String id, String url, Boolean isFile){

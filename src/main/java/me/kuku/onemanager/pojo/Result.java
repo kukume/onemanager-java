@@ -4,6 +4,9 @@ import com.alibaba.fastjson.annotation.JSONField;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Getter
 @ToString
 public class Result<T> {
@@ -40,6 +43,16 @@ public class Result<T> {
             return success(data);
         }
         return new Result<>(200, message, data);
+    }
+
+    public static Map<String, Object> map(Object value){
+        return map("data", value);
+    }
+
+    public static Map<String, Object> map(String key, Object value){
+        return new HashMap<String, Object>(){{
+            put(key, value);
+        }};
     }
 
     public static <T> Result<T> failure(String message){

@@ -83,6 +83,7 @@ public class OnedriveLogicImpl implements OnedriveLogic {
 			JSONObject errorJsonObject = jsonObject.getJSONObject("error");
 			throw new VerifyFailedException(errorJsonObject.getString("code") + "：" + errorJsonObject.getString("message"));
 		}
+		// @odata.nextLink  下一页url
 		List<OnedriveItemPojo> list = new ArrayList<>();
 		JSONArray jsonArray = jsonObject.getJSONArray("value");
 		jsonArray.stream().map(it -> (JSONObject) it).forEach(it -> {
@@ -93,6 +94,7 @@ public class OnedriveLogicImpl implements OnedriveLogic {
 			pojo.setIsFile(isFile);
 			if (isFile){
 				pojo.setUrl(it.getString("@microsoft.graph.downloadUrl"));
+				pojo.setMimeType(it.getJSONObject("file").getString("mimeType"));
 			}
 			list.add(pojo);
 		});

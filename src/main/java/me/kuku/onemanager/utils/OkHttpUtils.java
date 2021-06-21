@@ -337,9 +337,41 @@ public class OkHttpUtils {
         for (String cookie: cookies){
             if (cookie.contains("deleted")) continue;
             cookie = ApiUtils.regex(".*?;", cookie);
+            if (cookie == null) continue;
+            String[] arr = cookie.split("=");
+            if (arr.length != 2) continue;
+            if (arr[1].equals(";")) continue;
             sb.append(cookie).append(" ");
         }
         return sb.toString();
+    }
+
+    public static String getCookie(Response response, String name){
+        String cookie = getCookie(response);
+        return getCookie(cookie, name);
+    }
+
+    public static Map<String, String> getCookie(Response response, String...name){
+        String cookie = getCookie(response);
+        return getCookie(cookie, name);
+    }
+
+    public static String getCookieStr(Response response, String...name){
+        String cookie = getCookie(response);
+        return getCookieStr(cookie, name);
+    }
+
+    public static String getCookieStr(String cookie, String...name){
+        StringBuilder sb = new StringBuilder();
+        for (String str: name){
+            String singleCookie = getCookieStr(cookie, str);
+            sb.append(singleCookie);
+        }
+        return sb.toString();
+    }
+
+    private static String getCookieStr(String cookie, String name){
+        return ApiUtils.regex(name + "=[^;]+; ", cookie);
     }
 
     public static String getCookie(String cookie, String name){

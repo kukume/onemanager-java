@@ -62,6 +62,6 @@ public class DriveEntity {
 		this.otherConfig = JSON.toJSONString(t);
 	}
 
-	public static class Dao extends JPADao<Integer, DriveEntity>{}
+	public static class Dao extends JPADao<Integer, DriveEntity> {}
 
 }

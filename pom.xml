@@ -16,6 +16,13 @@
         <version>1.9.1.0</version>
     </parent>
 
+    <repositories>
+        <repository>
+            <id>myNexus</id>
+            <url>https://nexus.kuku.me/repository/maven-public/</url>
+        </repository>
+    </repositories>
+
     <properties>
         <app.entry>me.kuku.onemanager.AppEntry</app.entry>
 

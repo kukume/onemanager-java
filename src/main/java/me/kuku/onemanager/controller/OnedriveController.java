@@ -19,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 
 import static act.controller.Controller.Util.found;
+import static act.controller.Controller.Util.renderJson;
 
 @UrlContext("/onedrive")
 public class OnedriveController {
@@ -71,6 +72,10 @@ public class OnedriveController {
 	public void before(String name, ActionContext actionContext){
 		if (name != null){
 			DriveEntity driveEntity = driveService.findByName(name);
+			if (driveEntity == null) {
+				renderJson(Result.failure("呵呵"));
+				return;
+			}
 			OnedrivePojo onedrivePojo = driveEntity.getConfigParse(OnedrivePojo.class);
 			actionContext.renderArg("onedrivePojo", onedrivePojo);
 		}
