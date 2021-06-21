@@ -1,5 +1,6 @@
 package me.kuku.onemanager.utils;
 
+import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -8,6 +9,7 @@ import java.util.regex.Pattern;
 public class ApiUtils {
 
     private static final Map<String, Pattern> patternMap = new HashMap<>();
+    private static final DecimalFormat df = new DecimalFormat("#.00");
 
     public static String regex(String regex, String text){
         Pattern pattern;
@@ -60,10 +62,25 @@ public class ApiUtils {
 
     public static String parseSize(long size){
         // k m g t
-        if (size > 1024L * 1024 * 1024 * 1024) return size / 1024 / 1024 / 1024 / 1024 + "TB";
-        else if (size > 1024L * 1024 * 1024) return size / 1024 / 1024 / 1024 + "GB";
-        else if (size > 1024L * 1024) return size / 1024 / 1024 + "MB";
-        else if (size > 1024L) return size / 1024 + "KB";
-        else return size + "B";
+        double d = size;
+        double result = 0;
+        String suffix = "";
+        if (size > 1024L * 1024 * 1024 * 1024) {
+            result = d / 1024 / 1024 / 1024 / 1024;
+            suffix = "TB";
+        } else if (size > 1024L * 1024 * 1024) {
+            result = d / 1024 / 1024 / 1024;
+            suffix = "GB";
+        } else if (size > 1024L * 1024) {
+            result = d / 1024 / 1024;
+            suffix = "MB";
+        } else if (size > 1024L) {
+            result = d / 1024;
+            suffix = "KB";
+        } else {
+            result = d;
+            suffix = "B";
+        }
+        return df.format(result) + suffix;
     }
 }

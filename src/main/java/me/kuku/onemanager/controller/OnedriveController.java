@@ -68,7 +68,7 @@ public class OnedriveController {
 		found("/admin");
 	}
 
-	@Before(only = {"upload", "remove", "rename", "lock"})
+	@Before(except = {"callback", "authUrl", "token"})
 	public void before(String name, ActionContext actionContext){
 		if (name != null){
 			DriveEntity driveEntity = driveService.findByName(name);
@@ -108,5 +108,12 @@ public class OnedriveController {
 		boolean upload = onedriveLogic.upload(onedrivePojo, password.getBytes(StandardCharsets.UTF_8),
 				path + "/" + entity.getContent());
 		return upload ? Result.success() : Result.failure("加密失败！");
+	}
+
+	@PostAction("uploadMd")
+	public Result<?> uploadMd(OnedrivePojo onedrivePojo, String path, String value) throws IOException {
+		boolean upload = onedriveLogic.upload(onedrivePojo, value.getBytes(StandardCharsets.UTF_8),
+				path + "/readme.md");
+		return upload ? Result.success() : Result.failure("上传失败！");
 	}
 }

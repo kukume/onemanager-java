@@ -64,15 +64,18 @@ public class IndexController {
 
 	@Action(value = "/{name}/...", methods = {H.Method.GET, H.Method.POST})
 	@CacheFor
-	public Object index(String name, String __path, H.Request<?> req, H.Cookie passwordCookie, H.Response<?> resp, String password) throws IOException {
+	public Object index(String name, String __path, H.Request<?> req, H.Cookie passwordCookie, H.Response<?> resp,
+	                    String password, H.Cookie darkModeCookie) throws IOException {
 		List<DriveEntity> driveEntityList = driveService.findAll();
 		List<DriveEntity> resultList = driveEntityList.stream().filter(it -> it.getName().equals(name)).collect(Collectors.toList());
+		Map<String, Object> map = new HashMap<>();
+		if (darkModeCookie == null) map.put("darkMode", false);
+		else map.put("darkMode", darkModeCookie.value().equals("true"));
 		if (resultList.size() != 0){
 			OnedrivePojo onedrivePojo = resultList.get(0).getConfigParse(OnedrivePojo.class);
 			String[] paths = __path.split("/");
 			OnedriveItemPojo pojo = onedriveLogic.source(onedrivePojo, paths);
 			if (pojo.getIsFile()) return moved(pojo.getUrl());
-			Map<String, Object> map = new HashMap<>();
 			List<Map<String, String>> driveList = driveEntityList.stream().map(it -> {
 				Map<String, String> resultMap = new HashMap<>();
 				resultMap.put("name", it.getName());
@@ -99,13 +102,10 @@ public class IndexController {
 			map.put("siteName", siteName);
 			List<OnedriveItemPojo> list = onedriveLogic.listFile(onedrivePojo, paths);
 			SystemConfigEntity passwordFileEntity = typeMap.get(SystemConfigType.PASSWORD_FILE);
+			List<String> filterNameList = new ArrayList<>();
 			if (passwordFileEntity != null){
 				String passwordFileName = passwordFileEntity.getContent();
-				OnedriveItemPojo passwordItemPojo = null;
-				for (OnedriveItemPojo onedriveItemPojo : list) {
-					if (onedriveItemPojo.getIsFile() && onedriveItemPojo.getName().equals(passwordFileName))
-						passwordItemPojo = onedriveItemPojo;
-				}
+				OnedriveItemPojo passwordItemPojo = find(list, passwordFileName);
 				if (passwordItemPojo != null){
 					String itemPassword = OkHttpUtils.getStr(passwordItemPojo.getUrl());
 					boolean needPassword = true;
@@ -120,9 +120,15 @@ public class IndexController {
 					}
 					map.put("needPassword", needPassword);
 					if (needPassword) return map;
-					list = list.stream().filter(it-> !it.getName().equals(passwordFileName)).collect(Collectors.toList());
+					filterNameList.add(passwordFileName);
 				}
 			}
+			OnedriveItemPojo readmeItemPojo = find(list, "readme.md");
+			if (readmeItemPojo != null) {
+				map.put("readme", OkHttpUtils.getStr(readmeItemPojo.getUrl()));
+				filterNameList.add("readme.md");
+			}
+			list = list.stream().filter(it-> !filterNameList.contains(it.getName())).collect(Collectors.toList());
 			map.put("list", list);
 			if (contextPath.charAt(contextPath.length() - 1) != '/')
 				contextPath += "/";
@@ -134,9 +140,16 @@ public class IndexController {
 				String prePath = contextPath.substring(0, contextPath.lastIndexOf('/') + 1);
 				map.put("prePath", prePath);
 			}
-			return map;
 		}
-		return new ArrayList<>();
+		return map;
+	}
+
+	private OnedriveItemPojo find(List<OnedriveItemPojo> list, String name){
+		for (OnedriveItemPojo onedriveItemPojo : list) {
+			if (onedriveItemPojo.getIsFile() && onedriveItemPojo.getName().equalsIgnoreCase(name))
+				return onedriveItemPojo;
+		}
+		return null;
 	}
 
 }

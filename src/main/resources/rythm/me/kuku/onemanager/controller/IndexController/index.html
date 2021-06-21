@@ -2,15 +2,17 @@
 <!--suppress JSUnresolvedLibraryURL, EqualityComparisonWithCoercionJS -->
 @import me.kuku.onemanager.pojo.OnedriveItemPojo
 @args List<OnedriveItemPojo> list, String url, List<Map<String, String>> href, String name, String path, String siteName
-@args String prePath, List<Map<String, String>> driveList, Boolean needPassword
+@args String prePath, List<Map<String, String>> driveList, Boolean needPassword, String readme, String headReadme
+@args Boolean darkMode
 <html lang="zh_cn">
 <head>
     <meta charset="UTF-8">
     <title>@siteName</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@@1.0.1/dist/css/mdui.min.css"/>
+    <link rel="stylesheet" href="https://unpkg.zhimg.com/github-markdown-css@@3.0.1/github-markdown.css"/>
 </head>
-<body class="mdui-appbar-with-toolbar mdui-loaded mdui-theme-accent-pink">
+<body class="mdui-appbar-with-toolbar mdui-loaded mdui-theme-accent-pink @if(darkMode){mdui-theme-layout-dark}">
 <header class="mdui-appbar-fixed">
     <span class="mdui-toolbar">
     <button id="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></button>
@@ -162,6 +164,17 @@
     }
     <br/>
     <br/>
+    @if(!"".equals(readme)){
+        <div class="mdui-chip">
+            <span class="mdui-chip-icon"><i class="mdui-icon material-icons">face</i></span>
+            <span class="mdui-chip-title">README.md</span>
+        </div>
+        <br/>
+        <br/>
+        <div class="mdui-typo mdui-shadow-3 markdown" style="padding: 20px; margin: 20px 0; overflow-x: scroll; border-radius: 8px" id="markdown_bottom">
+
+        </div>
+    }
     <div class="mdui-row mdui-text-center" style="display: none">
         <input id="upload" class="mdui-textfield" type="file">
     </div>
@@ -176,13 +189,16 @@
         <div class="mdui-fab-dial">
             <button id="uploadBtn" class="mdui-fab mdui-fab-mini mdui-ripple mdui-color-pink"><i class="mdui-icon material-icons">cloud_upload</i></button>
             <button onclick="lockItem('@path')" class="mdui-fab mdui-fab-mini mdui-ripple mdui-color-red"><i class="mdui-icon material-icons">lock</i></button>
+            <button onclick="addMd('@path', 'readme.md')" class="mdui-fab mdui-fab-mini mdui-ripple mdui-color-blue"><i class="mdui-icon material-icons">book</i></button>
         </div>
     </div>
 </div>
 </body>
 <script src="https://cdn.jsdelivr.net/npm/mdui@@1.0.1/dist/js/mdui.min.js"></script>
+<script src="https://unpkg.zhimg.com/marked@@0.6.2/marked.min.js"></script>
 <script>
     var $ = mdui.$;
+    $("#markdown_bottom").html(marked('@readme'))
     $("#upload").on('change', function () {
         var inst = new mdui.Dialog('#wait')
         inst.open()
@@ -228,9 +244,13 @@
     $("#darkColor").on('click', function () {
         let body = $("body")
         let cl = body.attr('class')
-        if (cl.search('mdui-theme-layout-dark') != -1)
+        if (cl.search('mdui-theme-layout-dark') != -1) {
             body.attr('class', cl.replace('mdui-theme-layout-dark', ''))
-        else body.attr('class', cl += ' mdui-theme-layout-dark')
+            setCookie("darkMode", "false");
+        } else {
+            body.attr('class', cl += ' mdui-theme-layout-dark')
+            setCookie("darkMode", "true");
+        }
     })
     function deleteItem(id) {
         $.ajax({
@@ -280,6 +300,36 @@
                 }
             })
         })
+    }
+    function addMd(path) {
+        mdui.prompt('请输入markdown内容',
+            function (value) {
+                $.ajax({
+                    url: "/onedrive/uploadMd",
+                    method: "post",
+                    data: {
+                        "path": path,
+                        "value": value,
+                        "name": "@name"
+                    }, success: function (data) {
+                        let json = JSON.parse(data)
+                        if (json.code == 200) mdui.snackbar("添加markdown文件成功！")
+                        else mdui.snackbar("添加markdown文件失败！")
+                    }
+                })
+            },function (value) {
+
+            },
+            {
+                type: 'textarea'
+            }
+        );
+    }
+    function setCookie(name,value) {
+        var Days = 30;
+        var exp = new Date();
+        exp.setTime(exp.getTime() + Days * 24 * 60 * 60 * 1000);
+        document.cookie = name + "="+ escape (value) + ";expires=" + exp.toGMTString();
     }
 </script>
 </html>
