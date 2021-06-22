@@ -9,10 +9,7 @@ import me.kuku.onemanager.entity.DriveEntity;
 import me.kuku.onemanager.entity.SystemConfigEntity;
 import me.kuku.onemanager.exception.VerifyFailedException;
 import me.kuku.onemanager.logic.OnedriveLogic;
-import me.kuku.onemanager.pojo.OnedrivePojo;
-import me.kuku.onemanager.pojo.Result;
-import me.kuku.onemanager.pojo.ResultStatus;
-import me.kuku.onemanager.pojo.SystemConfigType;
+import me.kuku.onemanager.pojo.*;
 import me.kuku.onemanager.service.DriveService;
 import me.kuku.onemanager.service.SystemConfigService;
 import org.osgl.mvc.annotation.GetAction;
@@ -75,14 +72,12 @@ public class AdminController {
 		for (Map.Entry<String, String> entry: params.entrySet()){
 			String key = entry.getKey();
 			String value = entry.getValue();
-			if (!"".equals(value)){
-				SystemConfigType type = SystemConfigType.parse(key);
-				if (type != null){
-					SystemConfigEntity entity = systemConfigService.findByType(type);
-					if (entity == null) entity = new SystemConfigEntity(type);
-					entity.setContent(value);
-					systemConfigService.save(entity);
-				}
+			SystemConfigType type = SystemConfigType.parse(key);
+			if (type != null){
+				SystemConfigEntity entity = systemConfigService.findByType(type);
+				if (entity == null) entity = new SystemConfigEntity(type);
+				entity.setContent(value);
+				systemConfigService.save(entity);
 			}
 		}
 		return Result.success();
@@ -107,5 +102,28 @@ public class AdminController {
 			String url = onedriveLogic.authorizationUrl(onedrivePojo, driveEntity.getName());
 			return Result.success(Result.map("url", url));
 		}else return Result.failure(ResultStatus.DATA_NOT_EXISTS);
+	}
+
+	@PostAction("copy")
+	public Result<?> copy(@DbBind(value = "name", field = "name") DriveEntity driveEntity, String newName){
+		if (driveEntity == null) return Result.failure(ResultStatus.DATA_NOT_EXISTS);
+		if (driveService.findByName(newName) != null) return Result.failure(ResultStatus.DATA_EXISTS);
+		DriveEntity newEntity = new DriveEntity(null, newName, driveEntity.getDriveType(), driveEntity.getConfig(), driveEntity.getOtherConfig());
+		driveService.save(newEntity);
+		return Result.success("复制成功", null);
+	}
+
+	@PostAction("driveConfig")
+	public Result<?> driveConfig(@DbBind(value = "name", field = "name") DriveEntity driveEntity,
+	                             String proxy, String picPath, String onlyDic, String hide){
+		if (driveEntity == null) return Result.failure(ResultStatus.DATA_NOT_EXISTS);
+		DriveConfig driveConfig = driveEntity.getOtherConfigParse(DriveConfig.class);
+		if (proxy != null) driveConfig.setProxy(proxy);
+		if (picPath != null) driveConfig.setPicPath(picPath);
+		if (onlyDic != null) driveConfig.setOnlyPic(onlyDic);
+		if (hide != null) driveConfig.setHide(hide);
+		driveEntity.setOtherConfigParse(driveConfig);
+		driveService.save(driveEntity);
+		return Result.success("保存成功！", null);
 	}
 }

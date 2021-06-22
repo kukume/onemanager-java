@@ -11,6 +11,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@@1.0.1/dist/css/mdui.min.css"/>
     <link rel="stylesheet" href="https://unpkg.zhimg.com/github-markdown-css@@3.0.1/github-markdown.css"/>
+    <style>
+        @@media (max-width:740px){.forcedownload,.mdui-col-sm-2,.mdui-col-sm-3{display:none}.mdui-col-xs-12{width:100%}.mdui-drawer .mdui-list-item{margin-right:5px}}
+    </style>
 </head>
 <body class="mdui-appbar-with-toolbar mdui-loaded mdui-theme-accent-pink @if(darkMode){mdui-theme-layout-dark}">
 <header class="mdui-appbar-fixed">
@@ -31,6 +34,12 @@
             <i class="mdui-list-item-icon mdui-icon material-icons">account_circle</i>
             <div class="mdui-list-item-content">登录</div>
         </li>
+        <a href="/admin">
+            <li class="mdui-list-item mdui-ripple">
+                    <i class="mdui-list-item-icon mdui-icon material-icons">account_circle</i>
+                    <div class="mdui-list-item-content">后台管理</div>
+            </li>
+        </a>
         <li id="darkColor" class="mdui-list-item mdui-ripple">
             <i class="mdui-list-item-icon mdui-icon material-icons">brightness_4</i>
             <div class="mdui-list-item-content">深色模式</div>
@@ -329,7 +338,7 @@
         var Days = 30;
         var exp = new Date();
         exp.setTime(exp.getTime() + Days * 24 * 60 * 60 * 1000);
-        document.cookie = name + "="+ escape (value) + ";expires=" + exp.toGMTString();
+        document.cookie = name + "="+ escape (value) + ";expires=" + exp.toGMTString() + ";path='/'";
     }
 </script>
 </html>

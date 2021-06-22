@@ -12,7 +12,6 @@ public enum SystemConfigType {
 	BACKGROUND_M("backgroundM"),
 	CUSTOM_CSS("customCss"),
 	CUSTOM_SCRIPT("customScript"),
-	HIDE_FUNCTIONALITY_FILE("hideFunctionalityFile"),
 	REFERRER("referrer"),
 	SITE_NAME("siteName");
 

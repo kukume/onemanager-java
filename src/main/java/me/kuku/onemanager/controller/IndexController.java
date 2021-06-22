@@ -5,6 +5,7 @@ import act.util.CacheFor;
 import me.kuku.onemanager.entity.DriveEntity;
 import me.kuku.onemanager.entity.SystemConfigEntity;
 import me.kuku.onemanager.logic.OnedriveLogic;
+import me.kuku.onemanager.pojo.DriveConfig;
 import me.kuku.onemanager.pojo.OnedriveItemPojo;
 import me.kuku.onemanager.pojo.OnedrivePojo;
 import me.kuku.onemanager.pojo.SystemConfigType;
@@ -16,6 +17,7 @@ import org.osgl.http.H;
 import org.osgl.mvc.annotation.Action;
 import org.osgl.mvc.annotation.Before;
 import org.osgl.mvc.annotation.GetAction;
+import org.osgl.util.StringUtil;
 
 import javax.inject.Inject;
 import java.io.IOException;
@@ -72,7 +74,9 @@ public class IndexController {
 		if (darkModeCookie == null) map.put("darkMode", false);
 		else map.put("darkMode", darkModeCookie.value().equals("true"));
 		if (resultList.size() != 0){
-			OnedrivePojo onedrivePojo = resultList.get(0).getConfigParse(OnedrivePojo.class);
+			DriveEntity driveEntity = resultList.get(0);
+			OnedrivePojo onedrivePojo = driveEntity.getConfigParse(OnedrivePojo.class);
+			DriveConfig driveConfig = driveEntity.getOtherConfigParse(DriveConfig.class);
 			String[] paths = __path.split("/");
 			OnedriveItemPojo pojo = onedriveLogic.source(onedrivePojo, paths);
 			if (pojo.getIsFile()) return moved(pojo.getUrl());
@@ -96,7 +100,8 @@ public class IndexController {
 			}
 			map.put("href", hrefList);
 			String contextPath = req.path();
-			Map<SystemConfigType, SystemConfigEntity> typeMap = systemConfigService.findByTypeIn(SystemConfigType.SITE_NAME, SystemConfigType.PASSWORD_FILE);
+			Map<SystemConfigType, SystemConfigEntity> typeMap = systemConfigService.findByTypeIn(SystemConfigType.SITE_NAME,
+					SystemConfigType.PASSWORD_FILE);
 			SystemConfigEntity entity = typeMap.get(SystemConfigType.SITE_NAME);
 			String siteName = entity == null ? "OneManager": entity.getContent();
 			map.put("siteName", siteName);
@@ -128,6 +133,17 @@ public class IndexController {
 				map.put("readme", OkHttpUtils.getStr(readmeItemPojo.getUrl()));
 				filterNameList.add("readme.md");
 			}
+			String hides = driveConfig.getHide();
+			if (StringUtil.isNotEmpty(hides)) {
+				String[] hideArr = hides.split("\\|");
+				for (String hide : hideArr) {
+					String nowPath = removeSlash(__path);
+					String hidePath = removeSlash(hide);
+					list.forEach(it -> {
+						if ((nowPath + "/" + it.getName()).equals(hidePath)) filterNameList.add(it.getName());
+					});
+				}
+			}
 			list = list.stream().filter(it-> !filterNameList.contains(it.getName())).collect(Collectors.toList());
 			map.put("list", list);
 			if (contextPath.charAt(contextPath.length() - 1) != '/')
@@ -150,6 +166,16 @@ public class IndexController {
 				return onedriveItemPojo;
 		}
 		return null;
+	}
+
+	private String removeSlash(String str){
+		int l = str.length();
+		if (l == 0) return str;
+		if (str.charAt(l - 1) == '/')
+			str = str.substring(0, l - 1);
+		if (str.charAt(0) != '/')
+			str = "/" + str;
+		return str;
 	}
 
 }
