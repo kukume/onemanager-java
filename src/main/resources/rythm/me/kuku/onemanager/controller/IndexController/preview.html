@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+@args List<Map<String, String>> href, List<Map<String, String>> driveList, String siteName, Boolean darkMode, String name
+@args String url, String prePath
+<html lang="zh_cn">
+<head>
+    <meta charset="UTF-8">
+    <title>预览</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@@1.0.1/dist/css/mdui.min.css"/>
+    <link class="dplayer-css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/dplayer/dist/DPlayer.min.css">
+</head>
+<body class="mdui-appbar-with-toolbar mdui-loaded mdui-theme-accent-pink @if(darkMode){mdui-theme-layout-dark}">
+<header class="mdui-appbar-fixed">
+    <span class="mdui-toolbar">
+    <button id="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></button>
+        <a href="/@name" class="mdui-typo-headline">@siteName</a>
+        @if(href != null){
+            @for(Map<String, String> map: href){
+                <i class="mdui-icon material-icons">chevron_right</i>
+                <a href='@map.get("url")' class="mdui-typo-subheading mdui-hidden-xs">@map.get("name")</a>
+            }
+        }
+</span>
+</header>
+<div class="mdui-drawer mdui-drawer-close" id="drawer">
+    <ul class="mdui-list">
+        <li class="mdui-list-item mdui-ripple" mdui-dialog="{target: '#login_input'}">
+            <i class="mdui-list-item-icon mdui-icon material-icons">account_circle</i>
+            <div class="mdui-list-item-content">登录</div>
+        </li>
+        <a href="/admin">
+            <li class="mdui-list-item mdui-ripple">
+                <i class="mdui-list-item-icon mdui-icon material-icons">account_circle</i>
+                <div class="mdui-list-item-content">后台管理</div>
+            </li>
+        </a>
+        <li id="darkColor" class="mdui-list-item mdui-ripple">
+            <i class="mdui-list-item-icon mdui-icon material-icons">brightness_4</i>
+            <div class="mdui-list-item-content">深色模式</div>
+        </li>
+        @if(driveList != null){
+        <li class="mdui-divider"></li>
+        @for(Map<String, String> map: driveList){
+        <a href='@map.get("url")'>
+            <li class='mdui-list-item mdui-ripple @if(name.equals(map.get("name"))){mdui-list-item-active}'>
+                <i class="mdui-list-item-icon mdui-icon material-icons">cloud</i>
+                <div class="mdui-list-item-content">@map.get("name")</div>
+            </li>
+        </a>
+        }
+        }
+        <li class="mdui-divider"></li>
+        <a href="https://github.com/kukume/onemanager">
+            <li class="mdui-list-item mdui-ripple">
+                <i class="mdui-list-item-icon mdui-icon material-icons">code</i>
+                <div class="mdui-list-item-content">Github</div>
+            </li>
+        </a>
+    </ul>
+</div>
+<div class="mdui-container">
+    <div class="mdui-shadow-3" style="border-radius: 8px">
+        <ul class="mdui-list">
+            <li class="mdui-list-item mdui-ripple back">
+                <div class="mdui-row mdui-col-sm-12">
+                    <a href="@prePath">
+                        <div class="mdui-col-xs-7">
+                            <i class="mdui-icon material-icons">arrow_upward</i>
+                        </div>
+                        <div class="mdui-col-xs-3 mdui-text-right"></div>
+                        <div class="mdui-col-xs-2 mdui-text-right"></div>
+                    </a>
+                </div>
+            </li>
+        </ul>
+        <ul class="mdui-list">
+            <li class="mdui-list-item mdui-ripple">
+<!--                <img src="@url" width="100%" height="100%">-->
+                <div id="dplayer"></div>
+            </li>
+        </ul>
+    </div>
+
+    <div class="mdui-fab-wrapper">
+        <a target="_blank" href="@url" class="mdui-fab mdui-ripple mdui-color-theme-accent">
+            <i class="mdui-icon material-icons">arrow_downward</i>
+        </a>
+    </div>
+</div>
+</body>
+<script src="https://cdn.jsdelivr.net/npm/mdui@@1.0.1/dist/js/mdui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dplayer/dist/DPlayer.min.js"></script>
+<script>
+    var $ = mdui.$;
+    var leftInst = new mdui.Drawer('#drawer');
+    $("#menu").on('click', function () {
+        leftInst.toggle()
+    })
+    $("#darkColor").on('click', function () {
+        let body = $("body")
+        let cl = body.attr('class')
+        if (cl.search('mdui-theme-layout-dark') != -1) {
+            body.attr('class', cl.replace('mdui-theme-layout-dark', ''))
+            setCookie("darkMode", "false");
+        } else {
+            body.attr('class', cl += ' mdui-theme-layout-dark')
+            setCookie("darkMode", "true");
+        }
+    })
+    const dp = new DPlayer({
+        container: document.getElementById('dplayer'),
+        video: {
+            url: 'https://yun.315520.xyz/a1/%E5%8A%A8%E6%BC%AB/%E6%81%8B%E6%9F%93%E8%89%B2_1.mp4',
+            type: 'auto'
+        },
+    });
+</script>
+</html>

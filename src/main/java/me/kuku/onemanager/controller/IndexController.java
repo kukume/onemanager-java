@@ -1,14 +1,12 @@
 package me.kuku.onemanager.controller;
 
+import act.db.DbBind;
 import act.db.sql.tx.Transactional;
 import act.util.CacheFor;
 import me.kuku.onemanager.entity.DriveEntity;
 import me.kuku.onemanager.entity.SystemConfigEntity;
 import me.kuku.onemanager.logic.OnedriveLogic;
-import me.kuku.onemanager.pojo.DriveConfig;
-import me.kuku.onemanager.pojo.OnedriveItemPojo;
-import me.kuku.onemanager.pojo.OnedrivePojo;
-import me.kuku.onemanager.pojo.SystemConfigType;
+import me.kuku.onemanager.pojo.*;
 import me.kuku.onemanager.service.DriveService;
 import me.kuku.onemanager.service.SystemConfigService;
 import me.kuku.onemanager.utils.MD5Utils;
@@ -17,17 +15,18 @@ import org.osgl.http.H;
 import org.osgl.mvc.annotation.Action;
 import org.osgl.mvc.annotation.Before;
 import org.osgl.mvc.annotation.GetAction;
+import org.osgl.mvc.annotation.PostAction;
 import org.osgl.util.StringUtil;
 
 import javax.inject.Inject;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static act.controller.Controller.Util.moved;
+import static act.controller.Controller.Util.render;
 
 public class IndexController {
 	@Inject
@@ -67,7 +66,7 @@ public class IndexController {
 	@Action(value = "/{name}/...", methods = {H.Method.GET, H.Method.POST})
 	@CacheFor
 	public Object index(String name, String __path, H.Request<?> req, H.Cookie passwordCookie, H.Response<?> resp,
-	                    String password, H.Cookie darkModeCookie) throws IOException {
+	                    String password, H.Cookie darkModeCookie, String preview) throws IOException {
 		List<DriveEntity> driveEntityList = driveService.findAll();
 		List<DriveEntity> resultList = driveEntityList.stream().filter(it -> it.getName().equals(name)).collect(Collectors.toList());
 		Map<String, Object> map = new HashMap<>();
@@ -79,7 +78,6 @@ public class IndexController {
 			DriveConfig driveConfig = driveEntity.getOtherConfigParse(DriveConfig.class);
 			String[] paths = __path.split("/");
 			OnedriveItemPojo pojo = onedriveLogic.source(onedrivePojo, paths);
-			if (pojo.getIsFile()) return moved(pojo.getUrl());
 			List<Map<String, String>> driveList = driveEntityList.stream().map(it -> {
 				Map<String, String> resultMap = new HashMap<>();
 				resultMap.put("name", it.getName());
@@ -105,6 +103,18 @@ public class IndexController {
 			SystemConfigEntity entity = typeMap.get(SystemConfigType.SITE_NAME);
 			String siteName = entity == null ? "OneManager": entity.getContent();
 			map.put("siteName", siteName);
+			if (!contextPath.equals("/" + name) && !contextPath.equals("/" + name + "/")){
+				if (contextPath.charAt(contextPath.length() - 1) == '/')
+					contextPath = contextPath.substring(0, contextPath.length() - 2);
+				String prePath = contextPath.substring(0, contextPath.lastIndexOf('/') + 1);
+				map.put("prePath", prePath);
+			}
+			if (pojo.getIsFile()) {
+				if (preview == null) return moved(pojo.getUrl());
+				map.put("url", pojo.getUrl());
+				render("/preview");
+				return map;
+			}
 			List<OnedriveItemPojo> list = onedriveLogic.listFile(onedrivePojo, paths);
 			SystemConfigEntity passwordFileEntity = typeMap.get(SystemConfigType.PASSWORD_FILE);
 			List<String> filterNameList = new ArrayList<>();
@@ -150,12 +160,6 @@ public class IndexController {
 				contextPath += "/";
 			map.put("url", contextPath);
 			map.put("path", __path);
-			if (!contextPath.equals("/" + name) && !contextPath.equals("/" + name + "/")){
-				if (contextPath.charAt(contextPath.length() - 1) == '/')
-					contextPath = contextPath.substring(0, contextPath.length() - 2);
-				String prePath = contextPath.substring(0, contextPath.lastIndexOf('/') + 1);
-				map.put("prePath", prePath);
-			}
 		}
 		return map;
 	}
@@ -177,5 +181,49 @@ public class IndexController {
 			str = "/" + str;
 		return str;
 	}
+
+	@GetAction("upload")
+	public Map<String, Object> upload(){
+		Map<String, Object> map = new HashMap<>();
+		List<String> nameList = new ArrayList<>();
+		List<DriveEntity> list = driveService.findAll();
+		for (DriveEntity driveEntity : list) {
+			DriveConfig driveConfig = driveEntity.getOtherConfigParse(DriveConfig.class);
+			String path = driveConfig.getTouristUploadPath();
+			if (StringUtil.isNotEmpty(path)) nameList.add(driveEntity.getName());
+		}
+		map.put("nameList", nameList);
+		return map;
+	}
+
+	@PostAction("upload")
+	public Result<?> uploadResult(@DbBind(value = "name", field = "name") DriveEntity driveEntity, String filename, String url) throws IOException {
+		if (driveEntity == null) return Result.failure(ResultStatus.DATA_NOT_EXISTS);
+		DriveConfig driveConfig = driveEntity.getOtherConfigParse(DriveConfig.class);
+		String path = driveConfig.getTouristUploadPath();
+		if (StringUtil.isEmpty(path)) return Result.failure("该存储没有配置游客上传路径！");
+		LocalDateTime now = LocalDateTime.now();
+		int year = now.getYear();
+		int month = now.getMonth().getValue();
+		int day = now.getDayOfMonth();
+		OnedrivePojo onedrivePojo = driveEntity.getConfigParse(OnedrivePojo.class);
+		String[] arr = path.split("/");
+		long num = Arrays.stream(arr).filter(it -> !"".equals(it)).count();
+		String[] newArr = new String[Math.toIntExact(num + 4)];
+		AtomicInteger i = new AtomicInteger(0);
+		Arrays.stream(arr).filter(it -> !"".equals(it)).forEach(it -> newArr[i.getAndIncrement()] = it);
+		newArr[i.getAndIncrement()] = String.valueOf(year);
+		newArr[i.getAndIncrement()] = String.valueOf(month);
+		newArr[i.getAndIncrement()] = String.valueOf(day);
+		newArr[i.getAndIncrement()] = filename;
+		String uploadUrl = onedriveLogic.uploadBigFile(onedrivePojo, newArr);
+		Map<String, String> resultMap = new HashMap<>();
+		resultMap.put("uploadUrl", uploadUrl);
+		String uu = url + "/" + driveEntity.getName() + "/" + StringUtil.join("/", newArr);
+		resultMap.put("url", uu);
+		return Result.success(resultMap);
+	}
+
+
 
 }

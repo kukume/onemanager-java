@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+@args List<String> nameList
+<html lang="zh_cn">
+<head>
+    <meta charset="UTF-8">
+    <title>上传</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="//cdn.bootcss.com/zui/1.9.2/css/zui.min.css">
+    <link rel="stylesheet" href="//cdn.bootcss.com/zui/1.9.2/lib/bootbox/bootbox.min.css">
+</head>
+<body>
+<div class="container">
+    <h1>文件上传</h1>
+    <div class="panel panel-primary">
+        <div class="panel-body">
+            <form>
+                请选择您需要上传文件到的盘：
+                @for(String name: nameList){
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="name" value="@name"> @name
+                        </label>
+                    </div>
+                }
+                @if(nameList.size() == 0){
+                    哇哦，没有可以上传的盘哦
+                }
+            </form>
+        </div>
+    </div>
+    <input id="upload" type="file" style="display: none" multiple>
+    <button id="uploadBtn" class="btn btn-primary" type="button" @if(nameList.size() == 0){disabled}>上传</button>
+    <div id="result">
+
+    </div>
+</div>
+</body>
+<script src="//cdn.bootcss.com/zui/1.9.2/lib/jquery/jquery.js"></script>
+<script src="//cdn.bootcss.com/zui/1.9.2/js/zui.min.js"></script>
+<script src="//cdn.bootcss.com/zui/1.9.2/lib/bootbox/bootbox.min.js"></script>
+<script>
+    $("#upload").on('change', function () {
+        let value = $("input[name='name']:checked").val()
+        let dialog = showDialog()
+        let files = document.getElementById("upload").files;
+        let suc = 0
+        for (let i = 0; i < files.length; i++) {
+            $.ajax({
+                url: "/upload",
+                data: {
+                    "name": value,
+                    "url": location.protocol + "//" + location.host,
+                    "filename": files[i].name
+                },
+                method: 'post',
+                success: function (data) {
+                    let uploadUrl = data.data.uploadUrl
+                    let file = files[i]
+                    let allSize = file.size + ''
+                    let size = (file.size - 1) + ""
+                    let range = "bytes 0-" + size + "/" + allSize
+                    $.ajax({
+                        url: uploadUrl,
+                        contentType: 'application/octet-stream',
+                        data: file,
+                        headers: {
+                            "Content-Range": range
+                        },
+                        processData: false,
+                        // contentType: false,
+                        method: 'put',
+                        success: function (xx) {
+                            suc++;
+                            let fileUrl = data.data.url
+                            $("#result").append('<div class="panel panel-primary"><div class="panel-body">' + file.name + '：' + fileUrl + '</div></div>')
+                        }
+                    })
+                }
+            })
+        }
+        let sub = setInterval(function () {
+            if (suc == files.length){
+                closeDialog(dialog)
+                window.clearInterval(sub)
+            }
+        }, 1000)
+    })
+    function showDialog() {
+        return bootbox.dialog({
+            message: '<p class="text-center mb-0"><i class="fa fa-spin fa-cog"></i>上传中</p>',
+            closeButton: false
+        });
+    }
+    function closeDialog(dialog) {
+        dialog.modal('hide');
+    }
+    $("#uploadBtn").on('click', function () {
+        let value = $("input[name='name']:checked").val()
+        if (value == undefined) {
+            bootbox.alert("请选择您需要上传文件到的盘")
+            return
+        }
+        $("#upload").click()
+    })
+</script>
+</html>

@@ -115,11 +115,11 @@ public class AdminController {
 
 	@PostAction("driveConfig")
 	public Result<?> driveConfig(@DbBind(value = "name", field = "name") DriveEntity driveEntity,
-	                             String proxy, String picPath, String onlyDic, String hide){
+	                             String proxy, String touristUploadPath, String onlyDic, String hide){
 		if (driveEntity == null) return Result.failure(ResultStatus.DATA_NOT_EXISTS);
 		DriveConfig driveConfig = driveEntity.getOtherConfigParse(DriveConfig.class);
 		if (proxy != null) driveConfig.setProxy(proxy);
-		if (picPath != null) driveConfig.setPicPath(picPath);
+		if (touristUploadPath != null) driveConfig.setTouristUploadPath(touristUploadPath);
 		if (onlyDic != null) driveConfig.setOnlyPic(onlyDic);
 		if (hide != null) driveConfig.setHide(hide);
 		driveEntity.setOtherConfigParse(driveConfig);

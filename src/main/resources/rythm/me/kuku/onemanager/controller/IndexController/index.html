@@ -139,7 +139,7 @@
                                 }else{
                                     <i class="mdui-icon material-icons" mdui-menu="{target: '#@pojo.getId()', 'subMenuTrigger': 'hover'}">insert_drive_file</i>
                                 }
-                                <a href="@if(pojo.getIsFile()){@(url + pojo.getName())}else{@(url + pojo.getName())}">
+                                <a href='@if(pojo.getIsFile()){@(url + pojo.getName() + "?preview")}else{@(url + pojo.getName())}'>
                                     @pojo.getName()
                                 </a>
                             </div>

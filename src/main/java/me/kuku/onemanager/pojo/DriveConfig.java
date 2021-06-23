@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class DriveConfig {
 	private String proxy;
-	private String picPath;
+	private String touristUploadPath;
 	private String onlyPic;
 	private String hide;
 }

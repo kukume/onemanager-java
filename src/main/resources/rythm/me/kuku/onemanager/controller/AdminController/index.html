@@ -97,8 +97,8 @@
                         <input type="text" class="form-control" id="proxy_@name" placeholder="会将https://xxxxx-my.sharepoint.com替换成这个值，在目标需要自己设置反代。会加上&Origindomain=原域名">
                     </div>
                     <div class="form-group">
-                        <label>图床路径</label>
-                        <input type="text" class="form-control" id="picPath_@name" placeholder="设置游客上传路径（图床路径），不设置这个值时该目录内容会正常列文件出来，设置后只有上传界面，不显示其中文件（登录后显示）。">
+                        <label>游客上传路径</label>
+                        <input type="text" class="form-control" id="touristUploadPath_@name" placeholder="设置游客上传路径（图床路径），不设置这个值时该目录内容会正常列文件出来，设置后只有上传界面，不显示其中文件（登录后显示）。">
                     </div>
                     <div class="form-group">
                         <label>隐藏文件或文件夹</label>
@@ -170,7 +170,7 @@
         $.post("/admin/driveConfig", {
             "name": name,
             "proxy": $("#proxy_" + name).val(),
-            "picPath": $("#picPath_" + name).val(),
+            "touristUploadPath": $("#touristUploadPath_" + name).val(),
             "onlyDic": $("#onlyDic_" + name).val(),
             "hide": $("#hide_" + name).val()
         }, function (data) {
