@@ -45,6 +45,7 @@
         <!-- uncomment to add lombok support
         <act.lombok>/path/to/lombok.jar</act.lombok>
         -->
+        <act.lombok>lib/lombok.jar</act.lombok>
     </properties>
 
     <dependencies>

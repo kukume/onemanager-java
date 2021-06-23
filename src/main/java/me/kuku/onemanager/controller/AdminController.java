@@ -12,6 +12,9 @@ import me.kuku.onemanager.logic.OnedriveLogic;
 import me.kuku.onemanager.pojo.*;
 import me.kuku.onemanager.service.DriveService;
 import me.kuku.onemanager.service.SystemConfigService;
+import org.osgl.http.H;
+import org.osgl.mvc.annotation.Action;
+import org.osgl.mvc.annotation.Before;
 import org.osgl.mvc.annotation.GetAction;
 import org.osgl.mvc.annotation.PostAction;
 
@@ -22,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static act.controller.Controller.Util.*;
+
 @UrlContext("/admin")
 public class AdminController {
 
@@ -31,6 +36,47 @@ public class AdminController {
 	private OnedriveLogic onedriveLogic;
 	@Inject
 	private SystemConfigService systemConfigService;
+
+	@PostAction("login")
+	public Result<?> login(String password, H.Session session){
+		SystemConfigEntity entity = systemConfigService.findByType(SystemConfigType.PASSWORD);
+		if (entity == null) return Result.failure("系统还没有设置密码，无法登陆！");
+		if (password.equals(entity.getContent())){
+			session.put("admin", "is");
+			return Result.success();
+		}else return Result.failure("登陆失败，密码错误！");
+	}
+
+	@Action(value = "settingPassword", methods = {H.Method.GET, H.Method.POST})
+	public void settingPassword(String password, H.Session session){
+		if (systemConfigService.findByType(SystemConfigType.PASSWORD) != null) {
+			moved("admin");
+			return;
+		}
+		if (password != null) {
+			SystemConfigEntity entity = new SystemConfigEntity(SystemConfigType.PASSWORD);
+			entity.setContent(password);
+			systemConfigService.save(entity);
+			session.put("admin", "is");
+			moved("/admin");
+		}
+	}
+
+	@PostAction("logout")
+	public Result<?> logout(H.Session session){
+		session.remove("admin");
+		return Result.success();
+	}
+
+	@Before(except = {"login", "settingPassword", "logout"})
+	public void before(H.Session session){
+		SystemConfigEntity entity = systemConfigService.findByType(SystemConfigType.PASSWORD);
+		if (entity == null)
+			moved("settingPassword");
+		else if (session.get("admin") == null)
+			renderText("密码错误！");
+	}
+
 
 	@GetAction
 	public Map<String, Object> index(){

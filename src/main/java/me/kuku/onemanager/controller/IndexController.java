@@ -66,10 +66,14 @@ public class IndexController {
 	@Action(value = "/{name}/...", methods = {H.Method.GET, H.Method.POST})
 	@CacheFor
 	public Object index(String name, String __path, H.Request<?> req, H.Cookie passwordCookie, H.Response<?> resp,
-	                    String password, H.Cookie darkModeCookie, String preview) throws IOException {
+	                    String password, H.Cookie darkModeCookie, String preview, H.Session session) throws IOException {
 		List<DriveEntity> driveEntityList = driveService.findAll();
 		List<DriveEntity> resultList = driveEntityList.stream().filter(it -> it.getName().equals(name)).collect(Collectors.toList());
 		Map<String, Object> map = new HashMap<>();
+		Map<SystemConfigType, SystemConfigEntity> typeMap = systemConfigService.findByTypeIn(SystemConfigType.SITE_NAME,
+				SystemConfigType.PASSWORD_FILE, SystemConfigType.PASSWORD);
+		SystemConfigEntity adminPasswordEntity = typeMap.get(SystemConfigType.PASSWORD);
+		map.put("admin", session.get("admin") != null);
 		if (darkModeCookie == null) map.put("darkMode", false);
 		else map.put("darkMode", darkModeCookie.value().equals("true"));
 		if (resultList.size() != 0){
@@ -98,22 +102,25 @@ public class IndexController {
 			}
 			map.put("href", hrefList);
 			String contextPath = req.path();
-			Map<SystemConfigType, SystemConfigEntity> typeMap = systemConfigService.findByTypeIn(SystemConfigType.SITE_NAME,
-					SystemConfigType.PASSWORD_FILE);
 			SystemConfigEntity entity = typeMap.get(SystemConfigType.SITE_NAME);
 			String siteName = entity == null ? "OneManager": entity.getContent();
 			map.put("siteName", siteName);
 			if (!contextPath.equals("/" + name) && !contextPath.equals("/" + name + "/")){
 				if (contextPath.charAt(contextPath.length() - 1) == '/')
-					contextPath = contextPath.substring(0, contextPath.length() - 2);
+					contextPath = contextPath.substring(0, contextPath.length() - 1);
 				String prePath = contextPath.substring(0, contextPath.lastIndexOf('/') + 1);
 				map.put("prePath", prePath);
 			}
 			if (pojo.getIsFile()) {
 				if (preview == null) return moved(pojo.getUrl());
 				map.put("url", pojo.getUrl());
-				render("/preview");
-				return map;
+				String mimeType = pojo.getMimeType();
+				if (pojo.getName().endsWith(".flac")) mimeType = "audio/flac";
+				if (mimeType.startsWith("image") || mimeType.startsWith("video") || mimeType.startsWith("audio")) {
+					map.put("mimeType", mimeType);
+					render("/preview");
+					return map;
+				}else return moved(pojo.getUrl());
 			}
 			List<OnedriveItemPojo> list = onedriveLogic.listFile(onedrivePojo, paths);
 			SystemConfigEntity passwordFileEntity = typeMap.get(SystemConfigType.PASSWORD_FILE);

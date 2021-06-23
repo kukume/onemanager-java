@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 @args List<Map<String, String>> href, List<Map<String, String>> driveList, String siteName, Boolean darkMode, String name
-@args String url, String prePath
+@args String url, String prePath, String mimeType
 <html lang="zh_cn">
 <head>
     <meta charset="UTF-8">
@@ -73,12 +73,15 @@
                 </div>
             </li>
         </ul>
-        <ul class="mdui-list">
-            <li class="mdui-list-item mdui-ripple">
-<!--                <img src="@url" width="100%" height="100%">-->
-                <div id="dplayer"></div>
-            </li>
-        </ul>
+        <div style="padding: 15px!important; border-radius: 5px; background-color: #fff">
+                @if(mimeType.startsWith("image")){
+                    <img src="@url" width="100%" height="100%">
+                }else if(mimeType.startsWith("video")){
+                    <div id="dplayer"></div>
+                }else if(mimeType.startsWith("audio")){
+                    <audio src="@url" controls autoplay style="width: 100%;"></audio>
+                }
+        </div>
     </div>
 
     <div class="mdui-fab-wrapper">
@@ -107,12 +110,14 @@
             setCookie("darkMode", "true");
         }
     })
-    const dp = new DPlayer({
-        container: document.getElementById('dplayer'),
-        video: {
-            url: 'https://yun.315520.xyz/a1/%E5%8A%A8%E6%BC%AB/%E6%81%8B%E6%9F%93%E8%89%B2_1.mp4',
-            type: 'auto'
-        },
-    });
+    @if(mimeType.startsWith("video")){
+        const dp = new DPlayer({
+            container: document.getElementById('dplayer'),
+            video: {
+                url: '@url',
+                type: 'auto'
+            },
+        });
+    }
 </script>
 </html>

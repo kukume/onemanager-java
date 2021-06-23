@@ -148,10 +148,15 @@ public class OnedriveLogicImpl implements OnedriveLogic {
 			throw new VerifyFailedException(errorJsonObject.getString("code") + "：" + errorJsonObject.getString("message"));
 		}
 		String id = jsonObject.getString("id");
-		return new OnedriveItemPojo(id, jsonObject.getString("name"),
+		boolean isFile = jsonObject.containsKey("file");
+		OnedriveItemPojo onedriveItemPojo = new OnedriveItemPojo(id, jsonObject.getString("name"),
 				jsonObject.getString("createdDateTime"), jsonObject.getString("lastModifiedDateTime"),
 				jsonObject.getLong("size"), jsonObject.getString("@microsoft.graph.downloadUrl"),
-				jsonObject.containsKey("file"));
+				isFile);
+		if (isFile){
+			onedriveItemPojo.setMimeType(jsonObject.getJSONObject("file").getString("mimeType"));
+		}
+		return onedriveItemPojo;
 	}
 
 	@Override

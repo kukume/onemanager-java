@@ -13,7 +13,8 @@ public enum SystemConfigType {
 	CUSTOM_CSS("customCss"),
 	CUSTOM_SCRIPT("customScript"),
 	REFERRER("referrer"),
-	SITE_NAME("siteName");
+	SITE_NAME("siteName"),
+	PASSWORD("password");
 
 	private final String type;
 	SystemConfigType(String type){
