@@ -34,7 +34,10 @@
                         </select>
                     </div>
                     <a id="driveTypeBtn" href="/onedrive" class="btn btn-primary">添加盘</a>
-                    <a style="float: right" href="/" class="btn btn-primary">首页</a>
+                    <div style="float: right">
+                        <button id="clearCache" class="btn btn-primary">清除缓存</button>
+                        <a href="/" class="btn btn-primary">首页</a>
+                    </div>
                 </div>
                 <br/>
                 <div>
@@ -151,6 +154,11 @@
                 if (data.code == 200){
                     location.href = "/";
                 }else bootbox.alert(data.message);
+            })
+        })
+        $("#clearCache").click(function () {
+            $.post("/admin/clearCache", function () {
+                bootbox.alert("清除缓存成功！");
             })
         })
     })

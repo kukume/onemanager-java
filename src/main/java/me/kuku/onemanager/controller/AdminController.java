@@ -3,6 +3,7 @@ package me.kuku.onemanager.controller;
 import act.controller.annotation.UrlContext;
 import act.db.DbBind;
 import act.db.sql.tx.Transactional;
+import act.util.CacheFor;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import me.kuku.onemanager.entity.DriveEntity;
@@ -36,6 +37,8 @@ public class AdminController {
 	private OnedriveLogic onedriveLogic;
 	@Inject
 	private SystemConfigService systemConfigService;
+	@Inject
+	private CacheFor.Manager manager;
 
 	@PostAction("login")
 	public Result<?> login(String password, H.Session session){
@@ -50,14 +53,14 @@ public class AdminController {
 	@Action(value = "settingPassword", methods = {H.Method.GET, H.Method.POST})
 	public void settingPassword(String password, H.Session session){
 		if (systemConfigService.findByType(SystemConfigType.PASSWORD) != null) {
-			moved("admin");
+			moved("/admin");
 			return;
 		}
 		if (password != null) {
 			SystemConfigEntity entity = new SystemConfigEntity(SystemConfigType.PASSWORD);
 			entity.setContent(password);
 			systemConfigService.save(entity);
-			session.put("admin", "is");
+			session.put("admin", password);
 			moved("/admin");
 		}
 	}
@@ -184,5 +187,12 @@ public class AdminController {
 			session.remove("admin");
 			return Result.success();
 		}else return Result.failure("旧密码输入错误，请重试！");
+	}
+
+	@PostAction("clearCache")
+	public Result<?> clearCache(){
+		manager.resetCache(IndexController.class, "find");
+		manager.resetCache(IndexController.class, "index");
+		return Result.success();
 	}
 }

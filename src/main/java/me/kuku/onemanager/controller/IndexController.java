@@ -63,7 +63,7 @@ public class IndexController {
 			driveEntity = list.get(0);
 			return moved("/" + driveEntity.getName());
 		}
-		return new ArrayList<>();
+		return moved("/default");
 	}
 
 	@Action(value = "/{name}/...", methods = {H.Method.GET, H.Method.POST})
@@ -76,7 +76,7 @@ public class IndexController {
 		Map<SystemConfigType, SystemConfigEntity> typeMap = systemConfigService.findByTypeIn(SystemConfigType.SITE_NAME,
 				SystemConfigType.PASSWORD_FILE, SystemConfigType.PASSWORD, SystemConfigType.CUSTOM_CSS, SystemConfigType.CUSTOM_SCRIPT);
 		SystemConfigEntity adminPasswordEntity = typeMap.get(SystemConfigType.PASSWORD);
-		map.put("admin", adminPasswordEntity.getContent().equals(session.get("admin")));
+		map.put("admin", adminPasswordEntity != null && adminPasswordEntity.getContent().equals(session.get("admin")));
 		SystemConfigEntity cssEntity = typeMap.get(SystemConfigType.CUSTOM_CSS);
 		if (cssEntity != null) map.put("css", cssEntity.getContent());
 		SystemConfigEntity scriptEntity = typeMap.get(SystemConfigType.CUSTOM_SCRIPT);
