@@ -42,7 +42,7 @@ public class AdminController {
 		SystemConfigEntity entity = systemConfigService.findByType(SystemConfigType.PASSWORD);
 		if (entity == null) return Result.failure("系统还没有设置密码，无法登陆！");
 		if (password.equals(entity.getContent())){
-			session.put("admin", "is");
+			session.put("admin", password);
 			return Result.success();
 		}else return Result.failure("登陆失败，密码错误！");
 	}
@@ -73,7 +73,7 @@ public class AdminController {
 		SystemConfigEntity entity = systemConfigService.findByType(SystemConfigType.PASSWORD);
 		if (entity == null)
 			moved("settingPassword");
-		else if (session.get("admin") == null)
+		else if (!entity.getContent().equals(session.get("admin")))
 			renderText("密码错误！");
 	}
 
@@ -171,5 +171,18 @@ public class AdminController {
 		driveEntity.setOtherConfigParse(driveConfig);
 		driveService.save(driveEntity);
 		return Result.success("保存成功！", null);
+	}
+
+	@PostAction("changePassword")
+	@Transactional
+	public Object changePassword(String oldPassword, String newPassword, H.Session session){
+		SystemConfigEntity systemConfigEntity = systemConfigService.findByType(SystemConfigType.PASSWORD);
+		String password = systemConfigEntity.getContent();
+		if (oldPassword.equals(password)){
+			systemConfigEntity.setContent(newPassword);
+			systemConfigService.save(systemConfigEntity);
+			session.remove("admin");
+			return Result.success();
+		}else return Result.failure("旧密码输入错误，请重试！");
 	}
 }

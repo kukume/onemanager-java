@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--suppress EqualityComparisonWithCoercionJS -->
-<html lang="en">
+<html lang="zh_cn">
 @import com.alibaba.fastjson.JSONObject,me.kuku.onemanager.entity.SystemConfigEntity
 @args List<JSONObject> list, Map<String, SystemConfigEntity> systemConfigMap
 <head>
@@ -25,7 +25,7 @@
         <div class="tab-pane active" id="index">
             <div>
                 <br/>
-                <form class="form">
+                <div class="form">
                     <div class="form-group">
                         <label for="driveType">网盘类型：</label>
                         <select id="driveType" class="form-control">
@@ -34,21 +34,26 @@
                         </select>
                     </div>
                     <a id="driveTypeBtn" href="/onedrive" class="btn btn-primary">添加盘</a>
-                </form>
+                    <a style="float: right" href="/" class="btn btn-primary">首页</a>
+                </div>
+                <br/>
+                <div>
+                    <div class="form-group">
+                        <label for="oldPassword">旧密码</label>
+                        <input type="password" class="form-control" id="oldPassword" placeholder="请输入旧密码">
+                    </div>
+                    <div class="form-group">
+                        <label for="newPassword">新密码</label>
+                        <input type="password" class="form-control" id="newPassword" placeholder="请输入新密码">
+                    </div>
+                    <button id="changePassword" class="btn btn-primary">修改密码</button>
+                </div>
             </div>
         </div>
         <div class="tab-pane fade" id="var">
             <div>
                 <br/>
                 <div>
-                    <div class="form-group">
-                        <label for="background">PC背景url</label>
-                        <input type="text" class="form-control" id="background" value='@systemConfigMap.get("background")?.getContent()' placeholder="设置一个url作为背景">
-                    </div>
-                    <div class="form-group">
-                        <label for="backgroundM">手机背景url</label>
-                        <input type="text" class="form-control" id="backgroundM" value='@systemConfigMap.get("backgroundM")?.getContent()' placeholder="设置一个url作为手机端用的背景">
-                    </div>
                     <div class="form-group">
                         <label for="customCss">自定义css</label>
                         <input type="text" class="form-control" id="customCss" value='@systemConfigMap.get("customCss")?.getContent()' placeholder="<style>，在<head>最后面">
@@ -102,7 +107,7 @@
                     </div>
                     <div class="form-group">
                         <label>隐藏文件或文件夹</label>
-                        <input type="text" class="form-control" id="hide_@name" placeholder="隐藏文件或文件夹，以|分割"">
+                        <input type="text" class="form-control" id="hide_@name" placeholder="隐藏文件或文件夹，以|分割">
                     </div>
                     <button onclick="saveDriveConfig('@name')"  class="btn btn-primary">设置</button>
                 </div>
@@ -114,6 +119,7 @@
 <script src="//cdn.bootcss.com/zui/1.9.2/lib/jquery/jquery.js"></script>
 <script src="//cdn.bootcss.com/zui/1.9.2/js/zui.min.js"></script>
 <script src="//cdn.bootcss.com/zui/1.9.2/lib/bootbox/bootbox.min.js"></script>
+<script src="//cdn.bootcss.com/blueimp-md5/2.10.0/js/md5.js"></script>
 <script>
     $(document).ready(function () {
         $("#driveType").change(function () {
@@ -130,6 +136,21 @@
                 "siteName": $("#siteName").val()
             }, function (data) {
                 bootbox.alert("保存成功！");
+            })
+        })
+        $("#changePassword").click(function () {
+            let newPassword = $("#newPassword").val()
+            if (newPassword.length < 6){
+                bootbox.alert("密码不能少于6位！")
+                return
+            }
+            $.post("/admin/changePassword", {
+                "oldPassword": md5($("#oldPassword").val()),
+                "newPassword": md5(newPassword)
+            }, function (data) {
+                if (data.code == 200){
+                    location.href = "/";
+                }else bootbox.alert(data.message);
             })
         })
     })

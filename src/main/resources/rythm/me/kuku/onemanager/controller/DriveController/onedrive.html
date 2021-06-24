@@ -102,7 +102,7 @@
             // noinspection EqualityComparisonWithCoercionJS
             if (type == 0) {
                 let isChecked = $("#odBtn").is(":checked")
-                let data = {}
+                let data = {"host": location.protocol + "//" + location.host}
                 data.name = name
                 if (isChecked){
                     data.clientId = $("#odClientId").val()

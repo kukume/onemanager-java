@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+@args Boolean darkMode, String errMsg
+<html lang="zh_cn">
+<head>
+  <meta charset="UTF-8">
+  <title>异常</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@@1.0.1/dist/css/mdui.min.css"/>
+  <link class="dplayer-css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/dplayer/dist/DPlayer.min.css">
+</head>
+<body class="mdui-appbar-with-toolbar mdui-loaded mdui-theme-accent-pink @if(darkMode){mdui-theme-layout-dark}">
+<header class="mdui-appbar-fixed">
+    <span class="mdui-toolbar">
+    <button id="menu" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></button>
+        <a class="mdui-typo-headline">Onemanager</a>
+</span>
+</header>
+<div class="mdui-drawer mdui-drawer-close" id="drawer">
+  <ul class="mdui-list">
+    <li id="darkColor" class="mdui-list-item mdui-ripple">
+      <i class="mdui-list-item-icon mdui-icon material-icons">brightness_4</i>
+      <div class="mdui-list-item-content">深色模式</div>
+    </li>
+    <li class="mdui-divider"></li>
+    <a href="https://github.com/kukume/onemanager">
+      <li class="mdui-list-item mdui-ripple">
+        <i class="mdui-list-item-icon mdui-icon material-icons">code</i>
+        <div class="mdui-list-item-content">Github</div>
+      </li>
+    </a>
+  </ul>
+</div>
+<div class="mdui-container">
+  <div style="border-radius: 8px">
+      <h1>@errMsg</h1>  <a href="/" class="mdui-btn mdui-color-theme-accent mdui-ripple">主页</a>
+  </div>
+</div>
+</body>
+<script src="https://cdn.jsdelivr.net/npm/mdui@@1.0.1/dist/js/mdui.min.js"></script>
+<script>
+  var $ = mdui.$;
+  var leftInst = new mdui.Drawer('#drawer');
+  $("#menu").on('click', function () {
+    leftInst.toggle()
+  })
+  $("#darkColor").on('click', function () {
+    let body = $("body")
+    let cl = body.attr('class')
+    if (cl.search('mdui-theme-layout-dark') != -1) {
+      body.attr('class', cl.replace('mdui-theme-layout-dark', ''))
+      setCookie("darkMode", "false");
+    } else {
+      body.attr('class', cl += ' mdui-theme-layout-dark')
+      setCookie("darkMode", "true");
+    }
+  })
+</script>
+</html>

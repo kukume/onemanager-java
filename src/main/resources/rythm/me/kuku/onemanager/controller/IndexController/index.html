@@ -3,7 +3,7 @@
 @import me.kuku.onemanager.pojo.OnedriveItemPojo
 @args List<OnedriveItemPojo> list, String url, List<Map<String, String>> href, String name, String path, String siteName
 @args String prePath, List<Map<String, String>> driveList, Boolean needPassword, String readme
-@args Boolean darkMode, Boolean admin
+@args Boolean darkMode, Boolean admin, String css, String script
 <html lang="zh_cn">
 <head>
     <meta charset="UTF-8">
@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="https://unpkg.zhimg.com/github-markdown-css@@3.0.1/github-markdown.css"/>
     <style>
         @@media (max-width:740px){.forcedownload,.mdui-col-sm-2,.mdui-col-sm-3{display:none}.mdui-col-xs-12{width:100%}.mdui-drawer .mdui-list-item{margin-right:5px}}
+        @css
     </style>
 </head>
 <body class="mdui-appbar-with-toolbar mdui-loaded mdui-theme-accent-pink @if(darkMode){mdui-theme-layout-dark}">
@@ -51,6 +52,12 @@
             <i class="mdui-list-item-icon mdui-icon material-icons">brightness_4</i>
             <div class="mdui-list-item-content">深色模式</div>
         </li>
+        <a href="/upload">
+            <li class="mdui-list-item mdui-ripple">
+                <i class="mdui-list-item-icon mdui-icon material-icons">file_upload</i>
+                <div class="mdui-list-item-content">游客上传</div>
+            </li>
+        </a>
         @if(driveList != null){
             <li class="mdui-divider"></li>
             @for(Map<String, String> map: driveList){
@@ -369,10 +376,14 @@
             data: {"password": md5($("#password").val())},
             success: function (data) {
                 let json = JSON.parse(data)
-                if (json.code == 200) location.reload()
+                if (json.code == 200) {
+                    mdui.snackbar("登录成功！")
+                    location.reload()
+                }
                 else mdui.snackbar(json.message)
             }
         })
     })
 </script>
+<script>@script</script>
 </html>

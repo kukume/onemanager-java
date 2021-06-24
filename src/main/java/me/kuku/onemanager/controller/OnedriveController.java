@@ -17,6 +17,7 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.Map;
 
 import static act.controller.Controller.Util.found;
 import static act.controller.Controller.Util.renderJson;
@@ -30,26 +31,32 @@ public class OnedriveController {
 	@Inject
 	private SystemConfigService systemConfigService;
 
-	private final String REDIRECT_URL = "http://localhost:5460/onedrive/token";
-
 	@GetAction("callback")
 	public void callback(){}
 
 	@PostAction("authUrl")
-	public Result<?> authUrl(String name, String clientId, String clientSecret){
+	public Result<?> authUrl(String name, String clientId, String clientSecret, String host){
 		if (driveService.findByName(name) != null) return Result.failure(ResultStatus.DATA_EXISTS);
+		String redirectUrl = host + "/onedrive/token";
+		String state = name;
+		if (clientId == null || clientSecret == null){
+			clientId = "17cd12b4-60a6-4109-9353-3380c77c89c0";
+			clientSecret = "~V_v_p~bkejviTLTgIx75SA05~kOY-kA0I";
+			state = redirectUrl + "?state=" + name;
+			redirectUrl = "https://api.kuku.me/tool/onedrive";
+		}
 		OnedrivePojo onedrivePojo = new OnedrivePojo();
 		onedrivePojo.setClientId(clientId);
 		onedrivePojo.setClientSecret(clientSecret);
-		onedrivePojo.setRedirectUrl(REDIRECT_URL);
+		onedrivePojo.setRedirectUrl(redirectUrl);
 		DriveEntity entity = new DriveEntity();
 		entity.setName(name);
 		entity.setConfigParse(onedrivePojo);
 		entity.setDriveType(DriveType.ONEDRIVE);
 		driveService.save(entity);
-		return Result.success(new HashMap<String, String>(){{
-			put("url", onedriveLogic.authorizationUrl(onedrivePojo, name));
-		}});
+		Map<String, String> resultMap = new HashMap<>();
+		resultMap.put("url", onedriveLogic.authorizationUrl(onedrivePojo, state));
+		return Result.success(resultMap);
 	}
 
 	@Transactional

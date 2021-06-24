@@ -12,10 +12,7 @@ import me.kuku.onemanager.service.SystemConfigService;
 import me.kuku.onemanager.utils.MD5Utils;
 import me.kuku.onemanager.utils.OkHttpUtils;
 import org.osgl.http.H;
-import org.osgl.mvc.annotation.Action;
-import org.osgl.mvc.annotation.Before;
-import org.osgl.mvc.annotation.GetAction;
-import org.osgl.mvc.annotation.PostAction;
+import org.osgl.mvc.annotation.*;
 import org.osgl.util.StringUtil;
 
 import javax.inject.Inject;
@@ -35,6 +32,12 @@ public class IndexController {
 	private OnedriveLogic onedriveLogic;
 	@Inject
 	private SystemConfigService systemConfigService;
+
+	@Catch
+	public void error(Exception e){
+		String errMsg = e.getMessage();
+		render("error", errMsg);
+	}
 
 	@Before
 	@Transactional
@@ -71,9 +74,13 @@ public class IndexController {
 		List<DriveEntity> resultList = driveEntityList.stream().filter(it -> it.getName().equals(name)).collect(Collectors.toList());
 		Map<String, Object> map = new HashMap<>();
 		Map<SystemConfigType, SystemConfigEntity> typeMap = systemConfigService.findByTypeIn(SystemConfigType.SITE_NAME,
-				SystemConfigType.PASSWORD_FILE, SystemConfigType.PASSWORD);
+				SystemConfigType.PASSWORD_FILE, SystemConfigType.PASSWORD, SystemConfigType.CUSTOM_CSS, SystemConfigType.CUSTOM_SCRIPT);
 		SystemConfigEntity adminPasswordEntity = typeMap.get(SystemConfigType.PASSWORD);
-		map.put("admin", session.get("admin") != null);
+		map.put("admin", adminPasswordEntity.getContent().equals(session.get("admin")));
+		SystemConfigEntity cssEntity = typeMap.get(SystemConfigType.CUSTOM_CSS);
+		if (cssEntity != null) map.put("css", cssEntity.getContent());
+		SystemConfigEntity scriptEntity = typeMap.get(SystemConfigType.CUSTOM_SCRIPT);
+		if (scriptEntity != null) map.put("script", scriptEntity.getContent());
 		if (darkModeCookie == null) map.put("darkMode", false);
 		else map.put("darkMode", darkModeCookie.value().equals("true"));
 		if (resultList.size() != 0){
