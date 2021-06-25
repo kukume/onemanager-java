@@ -370,17 +370,25 @@
         document.cookie = c_name + "=" + escape(value) + ";expires=" + exdate.toGMTString() + ";path=/";
     }
     $("#login_btn").on('click', function () {
+        let pas = $("#password").val()
         $.ajax({
             "url": "/admin/login",
             "method": "post",
-            data: {"password": md5($("#password").val())},
+            data: {"password": md5(pas)},
             success: function (data) {
                 let json = JSON.parse(data)
+                console.log(json)
                 if (json.code == 200) {
-                    mdui.snackbar("登录成功！")
-                    location.reload()
-                }
-                else mdui.snackbar(json.message)
+                    mdui.snackbar("登录成功，3s后刷新页面！")
+                    setTimeout(function () {
+                        location.reload()
+                    }, 3000)
+                }else if (json.code == 201){
+                    mdui.snackbar("设置密码成功，您的密码为" + pas + "，正在进入后台中！")
+                    setTimeout(function () {
+                        location.href = "/admin"
+                    }, 3000)
+                } else mdui.snackbar(json.message)
             }
         })
     })

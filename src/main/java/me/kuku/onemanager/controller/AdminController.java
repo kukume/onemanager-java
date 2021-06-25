@@ -14,7 +14,6 @@ import me.kuku.onemanager.pojo.*;
 import me.kuku.onemanager.service.DriveService;
 import me.kuku.onemanager.service.SystemConfigService;
 import org.osgl.http.H;
-import org.osgl.mvc.annotation.Action;
 import org.osgl.mvc.annotation.Before;
 import org.osgl.mvc.annotation.GetAction;
 import org.osgl.mvc.annotation.PostAction;
@@ -43,25 +42,17 @@ public class AdminController {
 	@PostAction("login")
 	public Result<?> login(String password, H.Session session){
 		SystemConfigEntity entity = systemConfigService.findByType(SystemConfigType.PASSWORD);
-		if (entity == null) return Result.failure("系统还没有设置密码，无法登陆！");
-		if (password.equals(entity.getContent())){
-			session.put("admin", password);
-			return Result.success();
-		}else return Result.failure("登陆失败，密码错误！");
-	}
-
-	@Action(value = "settingPassword", methods = {H.Method.GET, H.Method.POST})
-	public void settingPassword(String password, H.Session session){
-		if (systemConfigService.findByType(SystemConfigType.PASSWORD) != null) {
-			moved("/admin");
-			return;
-		}
-		if (password != null) {
-			SystemConfigEntity entity = new SystemConfigEntity(SystemConfigType.PASSWORD);
+		if (entity == null) {
+			entity = new SystemConfigEntity(SystemConfigType.PASSWORD);
 			entity.setContent(password);
 			systemConfigService.save(entity);
 			session.put("admin", password);
-			moved("/admin");
+			return Result.failure(201, "设置密码成功！", null);
+		}else {
+			if (password.equals(entity.getContent())) {
+				session.put("admin", password);
+				return Result.success();
+			} else return Result.failure("登陆失败，密码错误！");
 		}
 	}
 
@@ -71,13 +62,13 @@ public class AdminController {
 		return Result.success();
 	}
 
-	@Before(except = {"login", "settingPassword", "logout"})
+	@Before(except = {"login", "logout"})
 	public void before(H.Session session){
 		SystemConfigEntity entity = systemConfigService.findByType(SystemConfigType.PASSWORD);
 		if (entity == null)
-			moved("settingPassword");
+			renderText("未配置密码，请先去首页进行登录。");
 		else if (!entity.getContent().equals(session.get("admin")))
-			renderText("密码错误！");
+			renderText("未授权，不允许访问！");
 	}
 
 

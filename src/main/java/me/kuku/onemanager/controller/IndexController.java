@@ -3,6 +3,7 @@ package me.kuku.onemanager.controller;
 import act.db.DbBind;
 import act.db.sql.tx.Transactional;
 import act.util.CacheFor;
+import act.view.Template;
 import me.kuku.onemanager.entity.DriveEntity;
 import me.kuku.onemanager.entity.SystemConfigEntity;
 import me.kuku.onemanager.logic.OnedriveLogic;
@@ -56,6 +57,7 @@ public class IndexController {
 	}
 
 	@GetAction("/")
+	@Template.NoCache
 	public Object find() throws IOException {
 		List<DriveEntity> list = driveService.findAll();
 		DriveEntity driveEntity;
