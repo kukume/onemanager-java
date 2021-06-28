@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+@import com.alibaba.fastjson.JSONObject,me.kuku.onemanager.entity.SystemConfigEntity, com.alibaba.fastjson.JSON
+@args List<JSONObject> list, Map<String, SystemConfigEntity> systemConfigMap, String curName, JSONObject jsonObject
+<html lang="zh_cn">
+<head>
+    <meta charset="UTF-8">
+    <title>OneManager后台管理 - @curName</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="//cdn.bootcss.com/zui/1.9.2/css/zui.min.css">
+    <link rel="stylesheet" href="//cdn.bootcss.com/zui/1.9.2/lib/bootbox/bootbox.min.css">
+</head>
+<body>
+@invoke("menu")
+<div class="container">
+    @{
+        String name = jsonObject.getString("name");
+        String size = jsonObject.getString("size");
+        JSONObject otherConfigJsonObject = JSON.parseObject(jsonObject.getString("otherConfig"));
+    }
+    <form class="form">
+        <div class="form-group">
+            <label>标签</label>
+            <input type="text" class="form-control" id="title" placeholder="标签" value="@name">
+        </div>
+        <button type="button" class="btn btn-primary" onclick="editName()">改变标签</button>
+        <button type="button" class="btn btn-primary" onclick="deletePan()">删除此盘</button>
+        <button type="button" class="btn btn-primary" onclick="copyPan()">复制此盘</button>
+        <button type="button" class="btn btn-primary" onclick="reAuth()">重新授权</button>
+        <div class="form-group">
+            <label>网盘类型</label>
+            <input type="text" class="form-control" disabled value="onedrive">
+        </div>
+        <div class="form-group">
+            <label>网盘空间</label>
+            <input type="text" class="form-control" disabled value="@s().escapeHtml(size)">
+        </div>
+        <div class="form-group">
+            <label>代理地址</label>
+            <input type="text" class="form-control" name="proxy" value='@otherConfigJsonObject.getString("proxy")' placeholder="会将https://xxxxx-my.sharepoint.com替换成这个值，在目标需要自己设置反代。会加上&Origindomain=原域名">
+        </div>
+        <div class="form-group">
+            <label>游客上传路径</label>
+            <input type="text" class="form-control" value='@otherConfigJsonObject.getString("touristUploadPath")' name="touristUploadPath" placeholder="设置游客上传路径（图床路径），设置后将在游客上传页面中显示">
+        </div>
+        <div class="form-group">
+            <label>隐藏文件或文件夹</label>
+            <input type="text" class="form-control" value='@otherConfigJsonObject.getString("hide")' name="hide" placeholder="隐藏文件或文件夹，以|分割">
+        </div>
+        <button type="button" onclick="saveDriveConfig()"  class="btn btn-primary">设置</button>
+    </form>
+</div>
+</body>
+<script src="//cdn.bootcss.com/zui/1.9.2/lib/jquery/jquery.js"></script>
+<script src="//cdn.bootcss.com/zui/1.9.2/js/zui.min.js"></script>
+<script src="//cdn.bootcss.com/zui/1.9.2/lib/bootbox/bootbox.min.js"></script>
+<script>
+    function deletePan() {
+        $.post("/admin/delpan", {"name": '@curName'}, function (data) {
+            location.href = "/admin"
+        })
+    }
+    function editName(){
+        let newName = $("#title").val()
+        $.post("/admin/editName", {
+            "name": '@curName',
+            "value": newName
+        }, function (data) {
+            bootbox.alert(data.message, function () {
+                if (data.code == 200)
+                    location.href = "/admin/" + newName
+            })
+        })
+    }
+    function reAuth() {
+        $.post("/admin/reAuth", {
+            "name": '@curName'
+        }, function (data) {
+            if (data.code == 200)
+                location.href = data.data.url
+            else bootbox.alert(data.message)
+        })
+    }
+    function copyPan() {
+        bootbox.prompt("请输入复制的新盘的名字", function(result){
+            $.post("/admin/copy", {
+                "name": '@curName',
+                "newName": result
+            }, function (data) {
+                if (data.code == 200) bootbox.alert("复制成功！")
+                else bootbox.alert(data.message)
+            })
+        })
+    }
+    function saveDriveConfig(){
+        let data = $(".form").serialize()
+        data += "&name=@curName"
+        $.post("/admin/driveConfig", data,
+            function (data) {
+            if (data.code == 200) bootbox.alert("保存成功！")
+            else bootbox.alert(data.message)
+        })
+    }
+</script>
+</html>

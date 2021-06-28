@@ -1,0 +1,36 @@
+@import com.alibaba.fastjson.JSONObject
+@args List<JSONObject> list, String curName
+<nav class="navbar navbar-inverse" role="navigation">
+    <div class="container-fluid">
+        <!-- 导航头部 -->
+        <div class="navbar-header">
+            <!-- 移动设备上的导航切换按钮 -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse-co">
+                <span class="sr-only">切换导航</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="">Onemanager后台管理</a>
+        </div>
+        <!-- 导航项目 -->
+        <div class="collapse navbar-collapse navbar-collapse-co">
+            <!-- 一般导航项目 -->
+            <ul class="nav navbar-nav">
+                <li @if(curName.equals("index")){class="active"}><a href="/admin">首页</a></li>
+                <li @if(curName.equals("var")){class="active"}><a href="/admin/var">平台变量</a></li>
+                @if(list != null){
+                    @for(JSONObject jsonObject: list){
+                    @{
+                        String name = jsonObject.getString("name");
+                    }
+                    <li @if(curName.equals(name)){class="active"}><a href="/admin/@name">@name</a></li>
+                    }
+                }
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li><a target="_blank" href="/"><i class="icon icon-home"></i></a></li>
+            </ul>
+        </div>
+    </div>
+</nav>

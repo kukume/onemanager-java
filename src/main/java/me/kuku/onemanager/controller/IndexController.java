@@ -1,15 +1,16 @@
 package me.kuku.onemanager.controller;
 
+import act.app.ActionContext;
 import act.db.DbBind;
 import act.db.sql.tx.Transactional;
 import act.util.CacheFor;
-import act.view.Template;
 import me.kuku.onemanager.entity.DriveEntity;
 import me.kuku.onemanager.entity.SystemConfigEntity;
 import me.kuku.onemanager.logic.OnedriveLogic;
 import me.kuku.onemanager.pojo.*;
 import me.kuku.onemanager.service.DriveService;
 import me.kuku.onemanager.service.SystemConfigService;
+import me.kuku.onemanager.utils.DateTimeFormatterUtils;
 import me.kuku.onemanager.utils.MD5Utils;
 import me.kuku.onemanager.utils.OkHttpUtils;
 import org.osgl.http.H;
@@ -18,6 +19,7 @@ import org.osgl.util.StringUtil;
 
 import javax.inject.Inject;
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -37,7 +39,7 @@ public class IndexController {
 	@Catch
 	public void error(Exception e){
 		String errMsg = e.getMessage();
-		render("error", errMsg);
+		render("/error", errMsg);
 	}
 
 	@Before
@@ -56,27 +58,24 @@ public class IndexController {
 		}
 	}
 
-	@GetAction("/")
-	@Template.NoCache
-	public Object find() throws IOException {
+	@GetAction
+	public void defaultIndex(H.Session session, H.Cookie darkModeCookie, ActionContext context) throws IOException {
 		List<DriveEntity> list = driveService.findAll();
-		DriveEntity driveEntity;
-		if (list != null && list.size() != 0) {
-			driveEntity = list.get(0);
-			return moved("/" + driveEntity.getName());
+		common(context.renderArgs(), darkModeCookie, session);
+		List<OnedriveItemPojo> itemList = new ArrayList<>();
+		for (DriveEntity driveEntity : list) {
+			OnedriveItemPojo pojo = new OnedriveItemPojo(null, driveEntity.getName(), "",
+					DateTimeFormatterUtils.formatNow("yyyy-MM-dd"), 0L, "/" + driveEntity.getName(), false);
+			itemList.add(pojo);
 		}
-		return moved("/default");
+		context.renderArg("list", itemList);
+		List<DriveEntity> driveEntityList = driveService.findAll();
+		addDriveList(context.renderArgs(), driveEntityList);
+		render("/index");
 	}
 
-	@Action(value = "/{name}/...", methods = {H.Method.GET, H.Method.POST})
-	@CacheFor
-	public Object index(String name, String __path, H.Request<?> req, H.Cookie passwordCookie, H.Response<?> resp,
-	                    String password, H.Cookie darkModeCookie, String preview, H.Session session) throws IOException {
-		List<DriveEntity> driveEntityList = driveService.findAll();
-		List<DriveEntity> resultList = driveEntityList.stream().filter(it -> it.getName().equals(name)).collect(Collectors.toList());
-		Map<String, Object> map = new HashMap<>();
-		Map<SystemConfigType, SystemConfigEntity> typeMap = systemConfigService.findByTypeIn(SystemConfigType.SITE_NAME,
-				SystemConfigType.PASSWORD_FILE, SystemConfigType.PASSWORD, SystemConfigType.CUSTOM_CSS, SystemConfigType.CUSTOM_SCRIPT);
+	private void common(Map<String, Object> map, H.Cookie darkModeCookie, H.Session session){
+		Map<SystemConfigType, SystemConfigEntity> typeMap = systemConfigService.findAllAsMap();
 		SystemConfigEntity adminPasswordEntity = typeMap.get(SystemConfigType.PASSWORD);
 		map.put("admin", adminPasswordEntity != null && adminPasswordEntity.getContent().equals(session.get("admin")));
 		SystemConfigEntity cssEntity = typeMap.get(SystemConfigType.CUSTOM_CSS);
@@ -85,19 +84,38 @@ public class IndexController {
 		if (scriptEntity != null) map.put("script", scriptEntity.getContent());
 		if (darkModeCookie == null) map.put("darkMode", false);
 		else map.put("darkMode", darkModeCookie.value().equals("true"));
+		SystemConfigEntity entity = typeMap.get(SystemConfigType.SITE_NAME);
+		String siteName = entity == null ? "OneManager": entity.getContent();
+		map.put("siteName", siteName);
+		SystemConfigEntity faviconEntity = typeMap.get(SystemConfigType.FAVICON);
+		if (faviconEntity != null) map.put("favicon", faviconEntity.getContent());
+	}
+
+	private void addDriveList(Map<String, Object> map, List<DriveEntity> driveEntityList){
+		List<Map<String, String>> driveList = driveEntityList.stream().map(it -> {
+			Map<String, String> resultMap = new HashMap<>();
+			resultMap.put("name", it.getName());
+			resultMap.put("url", "/" + it.getName());
+			return resultMap;
+		}).collect(Collectors.toList());
+		map.put("driveList", driveList);
+	}
+
+	@Action(value = "/{name}/...", methods = {H.Method.GET, H.Method.POST})
+	@CacheFor
+	public Object index(String name, String __path, H.Request<?> req, H.Cookie passwordCookie, H.Response<?> resp,
+	                    String password, H.Cookie darkModeCookie, String preview, H.Session session, ActionContext context) throws IOException {
+		List<DriveEntity> driveEntityList = driveService.findAll();
+		List<DriveEntity> resultList = driveEntityList.stream().filter(it -> it.getName().equals(name)).collect(Collectors.toList());
+		Map<String, Object> map = new HashMap<>();
+		common(map, darkModeCookie, session);
 		if (resultList.size() != 0){
 			DriveEntity driveEntity = resultList.get(0);
 			OnedrivePojo onedrivePojo = driveEntity.getConfigParse(OnedrivePojo.class);
 			DriveConfig driveConfig = driveEntity.getOtherConfigParse(DriveConfig.class);
 			String[] paths = __path.split("/");
 			OnedriveItemPojo pojo = onedriveLogic.source(onedrivePojo, paths);
-			List<Map<String, String>> driveList = driveEntityList.stream().map(it -> {
-				Map<String, String> resultMap = new HashMap<>();
-				resultMap.put("name", it.getName());
-				resultMap.put("url", "/" + it.getName());
-				return resultMap;
-			}).collect(Collectors.toList());
-			map.put("driveList", driveList);
+			addDriveList(map, driveEntityList);
 			map.put("name", name);
 			List<Map<String, String>> hrefList = new ArrayList<>();
 			StringBuilder sb = new StringBuilder("/").append(name).append("/");
@@ -111,28 +129,25 @@ public class IndexController {
 			}
 			map.put("href", hrefList);
 			String contextPath = req.path();
-			SystemConfigEntity entity = typeMap.get(SystemConfigType.SITE_NAME);
-			String siteName = entity == null ? "OneManager": entity.getContent();
-			map.put("siteName", siteName);
-			if (!contextPath.equals("/" + name) && !contextPath.equals("/" + name + "/")){
-				if (contextPath.charAt(contextPath.length() - 1) == '/')
-					contextPath = contextPath.substring(0, contextPath.length() - 1);
-				String prePath = contextPath.substring(0, contextPath.lastIndexOf('/') + 1);
-				map.put("prePath", prePath);
-			}
+			if (contextPath.charAt(contextPath.length() - 1) == '/')
+				contextPath = contextPath.substring(0, contextPath.length() - 1);
+			String prePath = contextPath.substring(0, contextPath.lastIndexOf('/') + 1);
+			map.put("prePath", prePath);
 			if (pojo.getIsFile()) {
 				if (preview == null) return moved(pojo.getUrl());
 				map.put("url", pojo.getUrl());
 				String mimeType = pojo.getMimeType();
 				if (pojo.getName().endsWith(".flac")) mimeType = "audio/flac";
-				if (mimeType.startsWith("image") || mimeType.startsWith("video") || mimeType.startsWith("audio")) {
+				if (mimeType.startsWith("image") || mimeType.startsWith("video") || mimeType.startsWith("audio") ||
+						mimeType.startsWith("application/vnd.openxmlformats")) {
 					map.put("mimeType", mimeType);
-					render("/preview");
-					return map;
+					map.put("encodeUrl", URLEncoder.encode(pojo.getUrl(), "utf-8"));
+					map.forEach(context::renderArg);
+					return render("/preview");
 				}else return moved(pojo.getUrl());
 			}
 			List<OnedriveItemPojo> list = onedriveLogic.listFile(onedrivePojo, paths);
-			SystemConfigEntity passwordFileEntity = typeMap.get(SystemConfigType.PASSWORD_FILE);
+			SystemConfigEntity passwordFileEntity = systemConfigService.findByType(SystemConfigType.PASSWORD_FILE);
 			List<String> filterNameList = new ArrayList<>();
 			if (passwordFileEntity != null){
 				String passwordFileName = passwordFileEntity.getContent();
@@ -149,8 +164,10 @@ public class IndexController {
 						if (passwordCookie != null && passwordCookie.value().equals(MD5Utils.toMD5(itemPassword)))
 							needPassword = false;
 					}
-					map.put("needPassword", needPassword);
-					if (needPassword) return map;
+					if (needPassword) {
+						map.forEach(context::renderArg);
+						return render("/needPassword");
+					}
 					filterNameList.add(passwordFileName);
 				}
 			}
@@ -239,7 +256,5 @@ public class IndexController {
 		resultMap.put("url", uu);
 		return Result.success(resultMap);
 	}
-
-
 
 }

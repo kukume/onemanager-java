@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<!--suppress EqualityComparisonWithCoercionJS -->
+<html lang="zh_cn">
+@import com.alibaba.fastjson.JSONObject,me.kuku.onemanager.entity.SystemConfigEntity
+@args List<JSONObject> list, Map<String, SystemConfigEntity> systemConfigMap
+<head>
+    <meta charset="UTF-8">
+    <title>OneManager设置</title>
+    <link rel="stylesheet" href="//cdn.bootcss.com/zui/1.9.2/css/zui.min.css">
+    <link rel="stylesheet" href="//cdn.bootcss.com/zui/1.9.2/lib/bootbox/bootbox.min.css">
+</head>
+<body>
+@invoke("menu")
+<div class="container">
+    <ul class="nav nav-primary nav-justified">
+        <li class="active"><a data-tab href="#index">首页</a></li>
+        <li><a data-tab href="#var">平台变量</a></li>
+        @for(JSONObject jsonObject: list){
+            @{
+                String name = jsonObject.getString("name");
+            }
+            <li><a data-tab href="#@name">@name</a></li>
+        }
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="index">
+            <div>
+                <br/>
+                <div class="form">
+                    <div class="form-group">
+                        <label for="driveType">网盘类型：</label>
+                        <select id="driveType" class="form-control">
+                            <option value="onedrive">onedrive</option>
+<!--                            <option value="onedriveCn">onedriveCn</option>-->
+                        </select>
+                    </div>
+                    <a id="driveTypeBtn" href="/onedrive" class="btn btn-primary">添加盘</a>
+                    <div style="float: right">
+                        <button id="clearCache" class="btn btn-primary">清除缓存</button>
+                        <a href="/" class="btn btn-primary">首页</a>
+                    </div>
+                </div>
+                <br/>
+                <div>
+                    <div class="form-group">
+                        <label for="oldPassword">旧密码</label>
+                        <input type="password" class="form-control" id="oldPassword" placeholder="请输入旧密码">
+                    </div>
+                    <div class="form-group">
+                        <label for="newPassword">新密码</label>
+                        <input type="password" class="form-control" id="newPassword" placeholder="请输入新密码">
+                    </div>
+                    <button id="changePassword" class="btn btn-primary">修改密码</button>
+                </div>
+            </div>
+        </div>
+        <div class="tab-pane fade" id="var">
+            <div>
+                <br/>
+                <div>
+                    <div class="form-group">
+                        <label for="customCss">自定义css</label>
+                        <input type="text" class="form-control" id="customCss" value='@systemConfigMap.get("customCss")?.getContent()' placeholder="<style>，在<head>最后面">
+                    </div>
+                    <div class="form-group">
+                        <label for="customScript">自定义JavaScript</label>
+                        <input type="text" class="form-control" id="customScript" value='@systemConfigMap.get("customScript")?.getContent()'  placeholder="<script>，在所有页都会存在，例如放一个http跳转到https">
+                    </div>
+                    <div class="form-group">
+                        <label for="passFile">密码文件名称</label>
+                        <input type="text" class="form-control" id="passFile" value='@systemConfigMap.get("passwordFile")?.getContent()' placeholder="自定义密码文件的名字，可以是'pppppp'，也可以是'aaaa.txt'等等；列目录时不会显示，只有知道密码才能查看或下载此文件。密码是这个文件的内容，可以空格、可以中文；">
+                    </div>
+                    <div class="form-group">
+                        <label for="siteName">网站名称</label>
+                        <input type="text" class="form-control" id="siteName" value='@systemConfigMap.get("siteName")?.getContent()' placeholder="网站的名称">
+                    </div>
+                    <button type="submit" id="systemSettingBtn" class="btn btn-primary">设置</button>
+                </div>
+            </div>
+        </div>
+        @for(JSONObject jsonObject: list){
+            @{
+                String name = jsonObject.getString("name");
+                String size = jsonObject.getString("size");
+            }
+            <div class="tab-pane fade" id="@name">
+                <div>
+                    <div class="form-group">
+                        <label>标签</label>
+                        <input type="text" class="form-control input_@name" placeholder="标签" value="@name">
+                    </div>
+                    <button class="btn btn-primary" onclick="editName('@name', 'input_@name')">改变标签</button>
+                    <button class="btn btn-primary" onclick="deletePan('@name')">删除此盘</button>
+                    <button class="btn btn-primary" onclick="copyPan('@name')">复制此盘</button>
+                    <button class="btn btn-primary" onclick="reAuth('@name')">重新授权</button>
+                    <div class="form-group">
+                        <label>网盘类型</label>
+                        <input type="text" class="form-control" disabled value="onedrive">
+                    </div>
+                    <div class="form-group">
+                        <label>网盘空间</label>
+                        <input type="text" class="form-control" disabled value="@s().escapeHtml(size)">
+                    </div>
+                    <div class="form-group">
+                        <label>代理地址</label>
+                        <input type="text" class="form-control" id="proxy_@name" placeholder="会将https://xxxxx-my.sharepoint.com替换成这个值，在目标需要自己设置反代。会加上&Origindomain=原域名">
+                    </div>
+                    <div class="form-group">
+                        <label>游客上传路径</label>
+                        <input type="text" class="form-control" id="touristUploadPath_@name" placeholder="设置游客上传路径（图床路径），不设置这个值时该目录内容会正常列文件出来，设置后只有上传界面，不显示其中文件（登录后显示）。">
+                    </div>
+                    <div class="form-group">
+                        <label>隐藏文件或文件夹</label>
+                        <input type="text" class="form-control" id="hide_@name" placeholder="隐藏文件或文件夹，以|分割">
+                    </div>
+                    <button onclick="saveDriveConfig('@name')"  class="btn btn-primary">设置</button>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+</body>
+<script src="//cdn.bootcss.com/zui/1.9.2/lib/jquery/jquery.js"></script>
+<script src="//cdn.bootcss.com/zui/1.9.2/js/zui.min.js"></script>
+<script src="//cdn.bootcss.com/zui/1.9.2/lib/bootbox/bootbox.min.js"></script>
+<script src="//cdn.bootcss.com/blueimp-md5/2.10.0/js/md5.js"></script>
+<script>
+    $(document).ready(function () {
+        $("#driveType").change(function () {
+            $("#driveTypeBtn").attr("href", this.value)
+        })
+        $("#systemSettingBtn").click(function () {
+            $.post("/admin/systemConfigSetting", {
+                "passwordFile": $("#passFile").val(),
+                "background": $("#background").val(),
+                "backgroundM": $("#backgroundM").val(),
+                "customCss": $("#customCss").val(),
+                "customScript": $("#customScript").val(),
+                "referrer": $("#referrer").val(),
+                "siteName": $("#siteName").val()
+            }, function (data) {
+                bootbox.alert("保存成功！");
+            })
+        })
+        $("#changePassword").click(function () {
+            let newPassword = $("#newPassword").val()
+            if (newPassword.length < 6){
+                bootbox.alert("密码不能少于6位！")
+                return
+            }
+            $.post("/admin/changePassword", {
+                "oldPassword": md5($("#oldPassword").val()),
+                "newPassword": md5(newPassword)
+            }, function (data) {
+                if (data.code == 200){
+                    location.href = "/";
+                }else bootbox.alert(data.message);
+            })
+        })
+        $("#clearCache").click(function () {
+            $.post("/admin/clearCache", function () {
+                bootbox.alert("清除缓存成功！");
+            })
+        })
+    })
+    function deletePan(name) {
+        $.post("/admin/delpan", {"name": name}, function (data) {
+            location.reload();
+        })
+    }
+    function editName(name, className){
+        $.post("/admin/editName", {
+            "name": name,
+            "value": $("." + className).val()
+        }, function (data) {
+            bootbox.alert(data.message)
+        })
+    }
+    function reAuth(name) {
+        $.post("/admin/reAuth", {
+            "name": name
+        }, function (data) {
+            if (data.code == 200)
+                location.href = data.data.url
+            else bootbox.alert(data.message)
+        })
+    }
+    function copyPan(name) {
+        bootbox.prompt("请输入复制的新盘的名字", function(result){
+            $.post("/admin/copy", {
+                "name": name,
+                "newName": result
+            }, function (data) {
+                if (data.code == 200) bootbox.alert("复制成功！")
+                else bootbox.alert(data.message)
+            })
+        })
+    }
+    function saveDriveConfig(name){
+        $.post("/admin/driveConfig", {
+            "name": name,
+            "proxy": $("#proxy_" + name).val(),
+            "touristUploadPath": $("#touristUploadPath_" + name).val(),
+            "onlyDic": $("#onlyDic_" + name).val(),
+            "hide": $("#hide_" + name).val()
+        }, function (data) {
+            if (data.code == 200) bootbox.alert("保存成功！")
+            else bootbox.alert(data.message)
+        })
+    }
+</script>
+</html>

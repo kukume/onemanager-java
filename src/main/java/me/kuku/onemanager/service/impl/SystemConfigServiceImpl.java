@@ -38,6 +38,14 @@ public class SystemConfigServiceImpl implements SystemConfigService {
 	}
 
 	@Override
+	public Map<SystemConfigType, SystemConfigEntity> findAllAsMap() {
+		Iterable<SystemConfigEntity> iter = dao.findAll();
+		Map<SystemConfigType, SystemConfigEntity> map = new HashMap<>();
+		iter.forEach(it -> map.put(it.getSystemConfigType(), it));
+		return map;
+	}
+
+	@Override
 	public List<SystemConfigEntity> findAll() {
 		return dao.findAllAsList();
 	}

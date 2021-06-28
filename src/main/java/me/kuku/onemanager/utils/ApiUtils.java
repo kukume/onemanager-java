@@ -81,6 +81,7 @@ public class ApiUtils {
             result = d;
             suffix = "B";
         }
+        if (result == 0) return result + suffix;
         return df.format(result) + suffix;
     }
 }

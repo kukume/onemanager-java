@@ -11,6 +11,7 @@ import java.util.Map;
 public interface SystemConfigService {
 	SystemConfigEntity findByType(SystemConfigType systemConfigType);
 	Map<SystemConfigType, SystemConfigEntity> findByTypeIn(SystemConfigType...systemConfigTypes);
+	Map<SystemConfigType, SystemConfigEntity> findAllAsMap();
 	List<SystemConfigEntity> findAll();
 	SystemConfigEntity save(SystemConfigEntity systemConfigEntity);
 }

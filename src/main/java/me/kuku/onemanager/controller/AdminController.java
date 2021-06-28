@@ -1,5 +1,6 @@
 package me.kuku.onemanager.controller;
 
+import act.app.ActionContext;
 import act.controller.annotation.UrlContext;
 import act.db.DbBind;
 import act.db.sql.tx.Transactional;
@@ -71,34 +72,48 @@ public class AdminController {
 			renderText("未授权，不允许访问！");
 	}
 
+	@Before(only = {"index", "var", "drive"})
+	public void htmlBefore(ActionContext context){
+		List<DriveEntity> findList = driveService.findAll();
+		List<JSONObject> list = findList.stream().map(JSON::toJSONString).map(JSON::parseObject).collect(Collectors.toList());
+		context.renderArg("list", list);
+	}
 
 	@GetAction
-	public Map<String, Object> index(){
-		List<DriveEntity> findList = driveService.findAll();
-		List<JSONObject> list = findList.stream().map(JSON::toJSONString).map(JSON::parseObject).peek(it -> {
-			try {
-				String config = it.getString("config");
-				JSONObject jsonObject = JSON.parseObject(config);
-				String size;
-				try {
-					size = onedriveLogic.size(new OnedrivePojo(jsonObject.getString("accessToken")));
-				} catch (VerifyFailedException e) {
-					e.printStackTrace();
-					size = "AccessToken已失效";
-				}
-				it.put("size", size);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}).collect(Collectors.toList());
+	public void index(ActionContext context){
+		context.renderArg("curName", "index");
+	}
+
+	@GetAction("var")
+	public void var(ActionContext context){
+		context.renderArg("curName", "var");
 		Map<String, SystemConfigEntity> systemConfigMap = new HashMap<>();
 		systemConfigService.findAll().forEach(it -> {
 			systemConfigMap.put(it.getSystemConfigType().getType(), it);
 		});
-		Map<String, Object> map = new HashMap<>();
-		map.put("list", list);
-		map.put("systemConfigMap", systemConfigMap);
-		return map;
+		context.renderArg("systemConfigMap", systemConfigMap);
+	}
+
+	@GetAction("{name}")
+	public void drive(String name, List<JSONObject> list, ActionContext context){
+		context.renderArg("curName", name);
+		boolean status = false;
+		for (JSONObject jsonObject : list) {
+			if (jsonObject.getString("name").equals(name)){
+				status = true;
+				String config = jsonObject.getString("config");
+				JSONObject configJsonObject = JSON.parseObject(config);
+				String size;
+				try {
+					size = onedriveLogic.size(new OnedrivePojo(configJsonObject.getString("accessToken")));
+				} catch (Exception e) {
+					size = "AccessToken已失效，重新进入一遍首页对应的盘会刷新";
+				}
+				jsonObject.put("size", size);
+				context.renderArg("jsonObject", jsonObject);
+			}
+		}
+		if (!status) renderText("没有找到这个名字的盘");
 	}
 
 	@PostAction("delpan")

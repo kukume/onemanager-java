@@ -7,14 +7,11 @@ import lombok.ToString;
 @Getter
 public enum SystemConfigType {
 	PASSWORD_FILE("passwordFile"),
-	ADMIN_LOGIN_PAGE("adminLoginPage"),
-	BACKGROUND("background"),
-	BACKGROUND_M("backgroundM"),
 	CUSTOM_CSS("customCss"),
 	CUSTOM_SCRIPT("customScript"),
-	REFERRER("referrer"),
 	SITE_NAME("siteName"),
-	PASSWORD("password");
+	PASSWORD("password"),
+	FAVICON("favicon");
 
 	private final String type;
 	SystemConfigType(String type){
