@@ -2,7 +2,7 @@
 <!--suppress JSUnresolvedLibraryURL, EqualityComparisonWithCoercionJS -->
 @import me.kuku.onemanager.pojo.OnedriveItemPojo
 @args List<OnedriveItemPojo> list, String url, List<Map<String, String>> href, String name, String path, String siteName
-@args String prePath, List<Map<String, String>> driveList, String readme
+@args String prePath, List<Map<String, String>> driveList, String readme, String head
 @args Boolean darkMode, Boolean admin, String css, String script, String favicon
 <html lang="zh_cn">
 <head>
@@ -35,6 +35,17 @@
     </div>
     <br/>
     <br/>
+    @if(!"".equals(head)){
+        <div class="mdui-chip">
+            <span class="mdui-chip-icon"><i class="mdui-icon material-icons">face</i></span>
+            <span class="mdui-chip-title">HEAD.md</span>
+        </div>
+        <br/>
+        <br/>
+        <div class="mdui-typo mdui-shadow-3 markdown" style="padding: 20px; margin: 20px 0; overflow-x: scroll; border-radius: 8px" id="markdown_head">
+
+        </div>
+    }
     <div class="mdui-shadow-3" style="border-radius: 8px">
         <ul class="mdui-list">
             <li class="mdui-list-item mdui-ripple">
@@ -131,7 +142,8 @@
         <div class="mdui-fab-dial">
             <button mdui-tooltip="{content: '文件上传', position: 'left'}" id="uploadBtn" class="mdui-fab mdui-fab-mini mdui-ripple mdui-color-pink"><i class="mdui-icon material-icons">cloud_upload</i></button>
             <button mdui-tooltip="{content: '文件夹加密', position: 'left'}" onclick="lockItem('@path')" class="mdui-fab mdui-fab-mini mdui-ripple mdui-color-red"><i class="mdui-icon material-icons">lock</i></button>
-            <button mdui-tooltip="{content: '添加Readme.md', position: 'left'}" onclick="addMd('@path', 'readme.md')" class="mdui-fab mdui-fab-mini mdui-ripple mdui-color-blue"><i class="mdui-icon material-icons">book</i></button>
+            <button mdui-tooltip="{content: '添加Readme.md', position: 'left'}" onclick="addMd('@path', 'readme.md', '底部markdown')" class="mdui-fab mdui-fab-mini mdui-ripple mdui-color-blue"><i class="mdui-icon material-icons">book</i></button>
+            <button mdui-tooltip="{content: '添加Head.md', position: 'left'}" onclick="addMd('@path', 'head.md', '头部markdown')" class="mdui-fab mdui-fab-mini mdui-ripple mdui-color-blue"><i class="mdui-icon material-icons">collections_bookmark</i></button>
         </div>
     </div>
     }
@@ -142,6 +154,7 @@
 <script>
     var $ = mdui.$;
     $("#markdown_bottom").html(marked('@readme'))
+    $("#markdown_head").html(marked('@head'))
     @if(admin){
         $("#upload").on('change', function () {
             var inst = new mdui.Dialog('#wait')
@@ -230,8 +243,9 @@
                 })
             })
         }
-        function addMd(path) {
-            mdui.prompt('请输入markdown内容',
+        function addMd(path, mdName, title) {
+            let defaultValue = mdName == "head.md" ? "@head" : "@readme"
+            mdui.prompt('请输入' + title + '内容',
                 function (value) {
                     $.ajax({
                         url: "/onedrive/uploadMd",
@@ -239,18 +253,20 @@
                         data: {
                             "path": path,
                             "value": value,
-                            "name": "@name"
+                            "name": "@name",
+                            "mdName": mdName
                         }, success: function (data) {
                             let json = JSON.parse(data)
-                            if (json.code == 200) mdui.snackbar("添加markdown文件成功！")
-                            else mdui.snackbar("添加markdown文件失败！")
+                            if (json.code == 200) mdui.snackbar("添加" + title + "文件成功！")
+                            else mdui.snackbar("添加" + title + "文件失败！")
                         }
                     })
                 },function (value) {
 
                 },
                 {
-                    type: 'textarea'
+                    type: 'textarea',
+                    defaultValue: defaultValue
                 }
             );
         }

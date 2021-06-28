@@ -107,7 +107,7 @@ public class IndexController {
 	                    String password, H.Cookie darkModeCookie, String preview, H.Session session, ActionContext context) throws IOException {
 		List<DriveEntity> driveEntityList = driveService.findAll();
 		List<DriveEntity> resultList = driveEntityList.stream().filter(it -> it.getName().equals(name)).collect(Collectors.toList());
-		Map<String, Object> map = new HashMap<>();
+		Map<String, Object> map = context.renderArgs();
 		common(map, darkModeCookie, session);
 		if (resultList.size() != 0){
 			DriveEntity driveEntity = resultList.get(0);
@@ -139,10 +139,10 @@ public class IndexController {
 				String mimeType = pojo.getMimeType();
 				if (pojo.getName().endsWith(".flac")) mimeType = "audio/flac";
 				if (mimeType.startsWith("image") || mimeType.startsWith("video") || mimeType.startsWith("audio") ||
-						mimeType.startsWith("application/vnd.openxmlformats")) {
+						mimeType.startsWith("application/vnd.openxmlformats") || mimeType.startsWith("text")) {
 					map.put("mimeType", mimeType);
 					map.put("encodeUrl", URLEncoder.encode(pojo.getUrl(), "utf-8"));
-					map.forEach(context::renderArg);
+					if (mimeType.startsWith("text")) map.put("text", OkHttpUtils.getStr(pojo.getUrl()));
 					return render("/preview");
 				}else return moved(pojo.getUrl());
 			}
@@ -165,7 +165,6 @@ public class IndexController {
 							needPassword = false;
 					}
 					if (needPassword) {
-						map.forEach(context::renderArg);
 						return render("/needPassword");
 					}
 					filterNameList.add(passwordFileName);
@@ -175,6 +174,11 @@ public class IndexController {
 			if (readmeItemPojo != null) {
 				map.put("readme", OkHttpUtils.getStr(readmeItemPojo.getUrl()));
 				filterNameList.add("readme.md");
+			}
+			OnedriveItemPojo headItemPojo = find(list, "head.md");
+			if (headItemPojo != null) {
+				map.put("head", OkHttpUtils.getStr(headItemPojo.getUrl()));
+				filterNameList.add("head.md");
 			}
 			String hides = driveConfig.getHide();
 			if (StringUtil.isNotEmpty(hides)) {

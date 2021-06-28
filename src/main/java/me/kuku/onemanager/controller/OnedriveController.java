@@ -3,6 +3,7 @@ package me.kuku.onemanager.controller;
 import act.app.ActionContext;
 import act.controller.annotation.UrlContext;
 import act.db.sql.tx.Transactional;
+import act.inject.SessionVariable;
 import me.kuku.onemanager.entity.DriveEntity;
 import me.kuku.onemanager.entity.SystemConfigEntity;
 import me.kuku.onemanager.logic.OnedriveLogic;
@@ -19,8 +20,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
-import static act.controller.Controller.Util.found;
-import static act.controller.Controller.Util.renderJson;
+import static act.controller.Controller.Util.*;
+import static act.controller.Controller.Util.renderText;
 
 @UrlContext("/onedrive")
 public class OnedriveController {
@@ -30,6 +31,13 @@ public class OnedriveController {
 	private DriveService driveService;
 	@Inject
 	private SystemConfigService systemConfigService;
+
+	@Before
+	public void gloBefore(@SessionVariable String admin){
+		SystemConfigEntity entity = systemConfigService.findByType(SystemConfigType.PASSWORD);
+		if (entity == null || !entity.getContent().equals(admin))
+			renderJson(Result.failure("未授权，禁止访问！"));
+	}
 
 	@GetAction("callback")
 	public void callback(){}
@@ -80,7 +88,7 @@ public class OnedriveController {
 		if (name != null){
 			DriveEntity driveEntity = driveService.findByName(name);
 			if (driveEntity == null) {
-				renderJson(Result.failure("呵呵"));
+				renderJson(Result.failure("没有这个驱动器！"));
 				return;
 			}
 			OnedrivePojo onedrivePojo = driveEntity.getConfigParse(OnedrivePojo.class);
@@ -118,9 +126,9 @@ public class OnedriveController {
 	}
 
 	@PostAction("uploadMd")
-	public Result<?> uploadMd(OnedrivePojo onedrivePojo, String path, String value) throws IOException {
+	public Result<?> uploadMd(OnedrivePojo onedrivePojo, String path, String value, String mdName) throws IOException {
 		boolean upload = onedriveLogic.upload(onedrivePojo, value.getBytes(StandardCharsets.UTF_8),
-				path + "/readme.md");
+				path + "/" + mdName);
 		return upload ? Result.success() : Result.failure("上传失败！");
 	}
 }
