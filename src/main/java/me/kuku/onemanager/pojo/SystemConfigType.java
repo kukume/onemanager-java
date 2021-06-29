@@ -12,7 +12,7 @@ public enum SystemConfigType {
 	SITE_NAME("siteName"),
 	PASSWORD("password"),
 	FAVICON("favicon"),
-	KEYWORD("keyword"),
+	KEYWORDS("keywords"),
 	DESCRIPTION("description"),
 	DISABLED_UA("disabledUa");
 

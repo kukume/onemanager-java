@@ -87,11 +87,13 @@ public class AdminController {
 	@GetAction("var")
 	public void var(ActionContext context){
 		context.renderArg("curName", "var");
-		Map<String, SystemConfigEntity> systemConfigMap = new HashMap<>();
-		systemConfigService.findAll().forEach(it -> {
-			systemConfigMap.put(it.getSystemConfigType().getType(), it);
-		});
-		context.renderArg("systemConfigMap", systemConfigMap);
+		List<SystemConfigEntity> list = systemConfigService.findAll();
+		JSONObject jsonObject = new JSONObject();
+		for (SystemConfigEntity entity : list) {
+			if (entity.getSystemConfigType() == SystemConfigType.PASSWORD) continue;
+			jsonObject.put(entity.getSystemConfigType().getType(), entity.getContent());
+		}
+		context.renderArg("jsonObject", jsonObject);
 	}
 
 	@GetAction("{name}")

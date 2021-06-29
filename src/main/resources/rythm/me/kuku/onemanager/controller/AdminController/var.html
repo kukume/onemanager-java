@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-@import com.alibaba.fastjson.JSONObject,me.kuku.onemanager.entity.SystemConfigEntity
-@args List<JSONObject> list, Map<String, SystemConfigEntity> systemConfigMap
+@import com.alibaba.fastjson.JSONObject
+@args List<JSONObject> list, JSONObject jsonObject
 <html lang="zh_cn">
 <head>
     <meta charset="UTF-8">
@@ -15,35 +15,35 @@
     <form class="form">
         <div class="form-group">
             <label>自定义css</label>
-            <input type="text" name="customCss" class="form-control" value='@systemConfigMap.get("customCss")?.getContent()' placeholder="<style>，在<head>最后面">
+            <input type="text" name="customCss" class="form-control" value='@jsonObject?.getString("customCss")' placeholder="自定义css">
         </div>
         <div class="form-group">
             <label>自定义JavaScript</label>
-            <input type="text" class="form-control" name="customScript" value='@systemConfigMap.get("customScript")?.getContent()'  placeholder="<script>，在所有页都会存在，例如放一个http跳转到https">
+            <input type="text" class="form-control" name="customScript" value='@jsonObject?.getString("customScript")' placeholder="自定义javascript">
         </div>
         <div class="form-group">
             <label>密码文件名称</label>
-            <input type="text" class="form-control" name="passwordFile" value='@systemConfigMap.get("passwordFile")?.getContent()' placeholder="自定义密码文件的名字，可以是'pppppp'，也可以是'aaaa.txt'等等；列目录时不会显示，只有知道密码才能查看或下载此文件。密码是这个文件的内容，可以空格、可以中文；">
+            <input type="text" class="form-control" name="passwordFile" value='@jsonObject?.getString("passwordFile")' placeholder="自定义密码文件的名字">
         </div>
         <div class="form-group">
             <label>网站名称</label>
-            <input type="text" class="form-control" name="siteName" value='@systemConfigMap.get("siteName")?.getContent()' placeholder="网站的名称">
+            <input type="text" class="form-control" name="siteName" value='@jsonObject?.getString("siteName")' placeholder="网站的名称">
         </div>
         <div class="form-group">
             <label>favicon图标地址</label>
-            <input type="text" class="form-control" name="favicon" value='@systemConfigMap.get("favicon")?.getContent()' placeholder="favicon图标地址">
+            <input type="text" class="form-control" name="favicon" value='@jsonObject?.getString("favicon")' placeholder="favicon图标地址">
         </div>
         <div class="form-group">
             <label>网站关键字</label>
-            <input type="text" class="form-control" name="keywords" value='@systemConfigMap.get("keywords")?.getContent()' placeholder="网站关键字">
+            <input type="text" class="form-control" name="keywords" value='@jsonObject?.getString("keywords")' placeholder="网站关键字">
         </div>
         <div class="form-group">
             <label>网站描述</label>
-            <input type="text" class="form-control" name="description" value='@systemConfigMap.get("description")?.getContent()' placeholder="网站描述">
+            <input type="text" class="form-control" name="description" value='@jsonObject?.getString("description")' placeholder="网站描述">
         </div>
         <div class="form-group">
             <label>禁止的UA关键字</label>
-            <input type="text" class="form-control" name="disabledUa" value='@systemConfigMap.get("disabledUa")?.getContent()' placeholder="禁止的UA关键字，如果有个，以|分割">
+            <input type="text" class="form-control" name="disabledUa" value='@jsonObject?.getString("disabledUa")' placeholder="禁止的UA关键字，如果有个，以|分割">
         </div>
         <button type="button" id="systemSettingBtn" class="btn btn-primary">设置</button>
     </form>

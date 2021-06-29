@@ -2,13 +2,15 @@
 <!--suppress JSUnresolvedLibraryURL, EqualityComparisonWithCoercionJS -->
 @import me.kuku.onemanager.pojo.OnedriveItemPojo
 @args List<OnedriveItemPojo> list, String url, List<Map<String, String>> href, String name, String path, String siteName
-@args String prePath, List<Map<String, String>> driveList, String readme, String head
+@args String prePath, List<Map<String, String>> driveList, String readme, String head, String description, String keywords
 @args Boolean darkMode, Boolean admin, String css, String script, String favicon
 <html lang="zh_cn">
 <head>
     <meta charset="UTF-8">
     <title>@siteName</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="@description" />
+    <meta name="keywords" content="@keywords" />
     @{
         if("".equals(favicon)){
             favicon = "/asset/favicon.ico";
