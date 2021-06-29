@@ -11,7 +11,10 @@ public enum SystemConfigType {
 	CUSTOM_SCRIPT("customScript"),
 	SITE_NAME("siteName"),
 	PASSWORD("password"),
-	FAVICON("favicon");
+	FAVICON("favicon"),
+	KEYWORD("keyword"),
+	DESCRIPTION("description"),
+	DISABLED_UA("disabledUa");
 
 	private final String type;
 	SystemConfigType(String type){

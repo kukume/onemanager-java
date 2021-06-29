@@ -13,6 +13,7 @@ import me.kuku.onemanager.service.SystemConfigService;
 import me.kuku.onemanager.utils.DateTimeFormatterUtils;
 import me.kuku.onemanager.utils.MD5Utils;
 import me.kuku.onemanager.utils.OkHttpUtils;
+import org.osgl.cache.CacheService;
 import org.osgl.http.H;
 import org.osgl.mvc.annotation.*;
 import org.osgl.util.StringUtil;
@@ -35,6 +36,8 @@ public class IndexController {
 	private OnedriveLogic onedriveLogic;
 	@Inject
 	private SystemConfigService systemConfigService;
+	@Inject
+	private CacheService cacheService;
 
 	@Catch
 	public void error(Exception e){
@@ -101,8 +104,20 @@ public class IndexController {
 		map.put("driveList", driveList);
 	}
 
+	@Before(only = "index")
+	public void beforeIndex(String name, String __path, ActionContext context){
+		Object o = cacheService.get(name + "|" + __path);
+		if (o != null){
+			IndexCache pojo = (IndexCache) o;
+			Map<String, Object> map = pojo.getMap();
+			map.forEach((k, v) -> {
+				context.renderArg(k, v);
+			});
+			render(pojo.getPath());
+		}
+	}
+
 	@Action(value = "/{name}/...", methods = {H.Method.GET, H.Method.POST})
-	@CacheFor
 	public Object index(String name, String __path, H.Request<?> req, H.Cookie passwordCookie, H.Response<?> resp,
 	                    String password, H.Cookie darkModeCookie, String preview, H.Session session, ActionContext context) throws IOException {
 		List<DriveEntity> driveEntityList = driveService.findAll();
@@ -199,6 +214,15 @@ public class IndexController {
 			map.put("path", __path);
 		}
 		return map;
+	}
+
+	@After(only = "index")
+	public void cacheIndex(String name, String __path, ActionContext context){
+		String tempPath = context.templatePath();
+		String path = tempPath.substring(tempPath.lastIndexOf('/'));
+		Map<String, Object> map = new HashMap<>();
+		context.renderArgs().forEach(map::put);
+		cacheService.put(name + "|" + __path, new IndexCache(path, map));
 	}
 
 	private OnedriveItemPojo find(List<OnedriveItemPojo> list, String name){

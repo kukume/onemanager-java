@@ -33,6 +33,18 @@
             <label>favicon图标地址</label>
             <input type="text" class="form-control" name="favicon" value='@systemConfigMap.get("favicon")?.getContent()' placeholder="favicon图标地址">
         </div>
+        <div class="form-group">
+            <label>网站关键字</label>
+            <input type="text" class="form-control" name="keywords" value='@systemConfigMap.get("keywords")?.getContent()' placeholder="网站关键字">
+        </div>
+        <div class="form-group">
+            <label>网站描述</label>
+            <input type="text" class="form-control" name="description" value='@systemConfigMap.get("description")?.getContent()' placeholder="网站描述">
+        </div>
+        <div class="form-group">
+            <label>禁止的UA关键字</label>
+            <input type="text" class="form-control" name="disabledUa" value='@systemConfigMap.get("disabledUa")?.getContent()' placeholder="禁止的UA关键字，如果有个，以|分割">
+        </div>
         <button type="button" id="systemSettingBtn" class="btn btn-primary">设置</button>
     </form>
 </div>

@@ -80,7 +80,7 @@ public class OnedriveController {
 	@GetAction("token")
 	public void token(String state, String code) throws IOException {
 		save(state, code);
-		found("/admin");
+		moved("/admin");
 	}
 
 	@Before(except = {"callback", "authUrl", "token"})
