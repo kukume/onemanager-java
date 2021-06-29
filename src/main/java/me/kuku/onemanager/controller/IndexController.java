@@ -5,6 +5,7 @@ import act.db.DbBind;
 import act.db.sql.tx.Transactional;
 import me.kuku.onemanager.entity.DriveEntity;
 import me.kuku.onemanager.entity.SystemConfigEntity;
+import me.kuku.onemanager.exception.VerifyFailedException;
 import me.kuku.onemanager.logic.OnedriveLogic;
 import me.kuku.onemanager.pojo.*;
 import me.kuku.onemanager.service.DriveService;
@@ -37,7 +38,7 @@ public class IndexController {
 	@Inject
 	private CacheService cacheService;
 
-	@Catch
+	@Catch(value = VerifyFailedException.class)
 	public void error(Exception e){
 		String errMsg = e.getMessage();
 		template("error", errMsg);

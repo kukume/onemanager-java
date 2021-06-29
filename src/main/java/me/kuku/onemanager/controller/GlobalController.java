@@ -19,13 +19,16 @@ public class GlobalController {
 	@Global
 	@Before
 	public void globalBefore(@HeaderVariable String userAgent){
-		if (userAgent.toUpperCase().contains("QQ")) throw forbidden();
+		if (userAgent.toUpperCase().contains("QQ")) {
+			forbidden();
+			return;
+		}
 		SystemConfigEntity entity = systemConfigService.findByType(SystemConfigType.DISABLED_UA);
 		if (entity != null){
 			String[] arr = entity.getContent().split("\\|");
 			for (String uaKey : arr) {
 				if ("".equals(uaKey)) continue;
-				if (userAgent.contains(uaKey)) throw forbidden();
+				if (userAgent.contains(uaKey)) forbidden();
 			}
 		}
 	}
