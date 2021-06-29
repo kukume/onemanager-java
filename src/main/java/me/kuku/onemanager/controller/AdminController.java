@@ -14,6 +14,7 @@ import me.kuku.onemanager.logic.OnedriveLogic;
 import me.kuku.onemanager.pojo.*;
 import me.kuku.onemanager.service.DriveService;
 import me.kuku.onemanager.service.SystemConfigService;
+import org.osgl.cache.CacheService;
 import org.osgl.http.H;
 import org.osgl.mvc.annotation.Before;
 import org.osgl.mvc.annotation.GetAction;
@@ -38,7 +39,7 @@ public class AdminController {
 	@Inject
 	private SystemConfigService systemConfigService;
 	@Inject
-	private CacheFor.Manager manager;
+	private CacheService cacheService;
 
 	@PostAction("login")
 	public Result<?> login(String password, H.Session session){
@@ -199,8 +200,7 @@ public class AdminController {
 
 	@PostAction("clearCache")
 	public Result<?> clearCache(){
-		manager.resetCache(IndexController.class, "find");
-		manager.resetCache(IndexController.class, "index");
+		cacheService.clear();
 		return Result.success();
 	}
 }
