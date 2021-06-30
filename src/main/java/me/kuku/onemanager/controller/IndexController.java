@@ -60,6 +60,11 @@ public class IndexController {
 		}
 	}
 
+	@GetAction("/favicon.ico")
+	public void toIco(){
+		moved("/asset/favicon.ico");
+	}
+
 	@Before(only = {"defaultIndex", "index"}, priority = 10)
 	public void paramsBefore(ActionContext context, H.Session session, H.Cookie darkModeCookie){
 		SystemConfigEntity entity = systemConfigService.findByType(SystemConfigType.PASSWORD);
@@ -118,8 +123,9 @@ public class IndexController {
 	@Before(only = "index", priority = 30)
 	public void indexBefore(String name, String __path, ActionContext context, H.Request<?> req){
 		String method = req.method().name();
-		if (method.equals("GET")) {
-			String key = name + "|" + __path + "admin" + context.renderArg("admin").toString();
+		Object admin = context.renderArg("admin");
+		if (method.equals("GET") && admin != null) {
+			String key = name + "|" + __path + admin;
 			Object o = cacheService.get(key);
 			if (o != null) {
 				IndexCache pojo = (IndexCache) o;
@@ -234,13 +240,13 @@ public class IndexController {
 	@After(only = "index")
 	public void cacheIndex(String name, String __path, ActionContext context, H.Request<?> req){
 		String method = req.method().name();
-		if (method.equals("GET")) {
+		Object admin = context.renderArg("admin");
+		if (method.equals("GET") && admin != null) {
 			String tempPath = context.templatePath();
-			String path = tempPath.substring(tempPath.lastIndexOf('/'));
 			Map<String, Object> map = new HashMap<>();
 			context.renderArgs().forEach(map::put);
-			String key = name + "|" + __path + "admin" + context.renderArg("admin").toString();
-			cacheService.put(key, new IndexCache(path, map), 3600);
+			String key = name + "|" + __path + admin;
+			cacheService.put(key, new IndexCache(tempPath, map), 3600);
 		}
 	}
 
