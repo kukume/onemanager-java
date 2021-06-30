@@ -13,7 +13,6 @@ import me.kuku.onemanager.service.SystemConfigService;
 import me.kuku.onemanager.utils.DateTimeFormatterUtils;
 import me.kuku.onemanager.utils.MD5Utils;
 import me.kuku.onemanager.utils.OkHttpUtils;
-import org.osgl.cache.CacheService;
 import org.osgl.http.H;
 import org.osgl.mvc.annotation.*;
 import org.osgl.util.StringUtil;
@@ -35,8 +34,6 @@ public class IndexController {
 	private OnedriveLogic onedriveLogic;
 	@Inject
 	private SystemConfigService systemConfigService;
-	@Inject
-	private CacheService cacheService;
 
 	@Catch(value = VerifyFailedException.class)
 	public void error(Exception e){
@@ -67,16 +64,25 @@ public class IndexController {
 
 	@Before(only = {"defaultIndex", "index"}, priority = 10)
 	public void paramsBefore(ActionContext context, H.Session session, H.Cookie darkModeCookie){
-		SystemConfigEntity entity = systemConfigService.findByType(SystemConfigType.PASSWORD);
-		context.renderArg("admin", entity != null && entity.getContent().equals(session.get("admin")));
+		Map<SystemConfigType, SystemConfigEntity> typeMap = systemConfigService.findAllAsMap();
+		SystemConfigEntity passwordEntity = typeMap.get(SystemConfigType.PASSWORD);
+		context.renderArg("admin", passwordEntity != null && passwordEntity.getContent().equals(session.get("admin")));
 		if (darkModeCookie == null) context.renderArg("darkMode", false);
 		else context.renderArg("darkMode", darkModeCookie.value().equals("true"));
+		SystemConfigEntity siteNameEntity = typeMap.get(SystemConfigType.SITE_NAME);
+		context.renderArg("siteName", siteNameEntity == null ? "OneManager": siteNameEntity.getContent());
+		addConfig(context, typeMap.get(SystemConfigType.FAVICON));
+		addConfig(context, typeMap.get(SystemConfigType.CUSTOM_SCRIPT));
+		addConfig(context, typeMap.get(SystemConfigType.CUSTOM_CSS));
+		SystemConfigEntity descriptionEntity = typeMap.get(SystemConfigType.DESCRIPTION);
+		context.renderArg("description", descriptionEntity == null || "".equals(descriptionEntity.getContent()) ? "An index & manager of Onedrive." : descriptionEntity.getContent());
+		SystemConfigEntity keywordEntity = typeMap.get(SystemConfigType.KEYWORDS);
+		context.renderArg("keywords", keywordEntity == null || "".equals(keywordEntity.getContent()) ? "OneManager" : keywordEntity.getContent());
 	}
 
 	@GetAction
 	public void defaultIndex(ActionContext context) {
 		List<DriveEntity> list = driveService.findAll();
-		common(context.renderArgs());
 		List<OnedriveItemPojo> itemList = new ArrayList<>();
 		for (DriveEntity driveEntity : list) {
 			OnedriveItemPojo pojo = new OnedriveItemPojo(null, driveEntity.getName(), "",
@@ -89,24 +95,10 @@ public class IndexController {
 		render("index");
 	}
 
-	private void common(Map<String, Object> map){
-		Map<SystemConfigType, SystemConfigEntity> typeMap = systemConfigService.findAllAsMap();
-		SystemConfigEntity entity = typeMap.get(SystemConfigType.SITE_NAME);
-		String siteName = entity == null ? "OneManager": entity.getContent();
-		map.put("siteName", siteName);
-		addConfig(map, typeMap.get(SystemConfigType.FAVICON));
-		addConfig(map, typeMap.get(SystemConfigType.CUSTOM_SCRIPT));
-		addConfig(map, typeMap.get(SystemConfigType.CUSTOM_CSS));
-		SystemConfigEntity descriptionEntity = typeMap.get(SystemConfigType.DESCRIPTION);
-		map.put("description", descriptionEntity == null || "".equals(descriptionEntity.getContent()) ? "An index & manager of Onedrive." : descriptionEntity.getContent());
-		SystemConfigEntity keywordEntity = typeMap.get(SystemConfigType.KEYWORDS);
-		map.put("keywords", keywordEntity == null || "".equals(keywordEntity.getContent()) ? "OneManager" : keywordEntity.getContent());
-	}
-
-	private void addConfig(Map<String, Object> map, SystemConfigEntity entity){
+	private void addConfig(ActionContext context, SystemConfigEntity entity){
 		if (entity != null) {
 			String name = entity.getSystemConfigType().getType();
-			map.put(name, entity.getContent());
+			context.renderArg(name, entity.getContent());
 		}
 	}
 
@@ -120,31 +112,12 @@ public class IndexController {
 		map.put("driveList", driveList);
 	}
 
-	@Before(only = "index", priority = 30)
-	public void indexBefore(String name, String __path, ActionContext context, H.Request<?> req){
-		String method = req.method().name();
-		Object admin = context.renderArg("admin");
-		if (method.equals("GET") && admin != null) {
-			String key = name + "|" + __path + admin;
-			Object o = cacheService.get(key);
-			if (o != null) {
-				IndexCache pojo = (IndexCache) o;
-				Map<String, Object> map = pojo.getMap();
-				map.forEach((k, v) -> {
-					context.renderArg(k, v);
-				});
-				template(pojo.getPath());
-			}
-		}
-	}
-
 	@Action(value = "{name}/...", methods = {H.Method.GET, H.Method.POST})
 	public Object index(String name, String __path, H.Request<?> req, H.Cookie passwordCookie, H.Response<?> resp,
 	                    String password, String preview, ActionContext context) throws IOException {
 		List<DriveEntity> driveEntityList = driveService.findAll();
 		List<DriveEntity> resultList = driveEntityList.stream().filter(it -> it.getName().equals(name)).collect(Collectors.toList());
 		Map<String, Object> map = context.renderArgs();
-		common(map);
 		if (resultList.size() != 0){
 			DriveEntity driveEntity = resultList.get(0);
 			OnedrivePojo onedrivePojo = driveEntity.getConfigParse(OnedrivePojo.class);
@@ -235,19 +208,6 @@ public class IndexController {
 			map.put("path", __path);
 		}
 		return map;
-	}
-
-	@After(only = "index")
-	public void cacheIndex(String name, String __path, ActionContext context, H.Request<?> req){
-		String method = req.method().name();
-		Object admin = context.renderArg("admin");
-		if (method.equals("GET") && admin != null) {
-			String tempPath = context.templatePath();
-			Map<String, Object> map = new HashMap<>();
-			context.renderArgs().forEach(map::put);
-			String key = name + "|" + __path + admin;
-			cacheService.put(key, new IndexCache(tempPath, map), 3600);
-		}
 	}
 
 	private OnedriveItemPojo find(List<OnedriveItemPojo> list, String name){

@@ -1,0 +1,10 @@
+Scenario:
+  interactions:
+    - description: send request to the app without parameter
+      request:
+        headers:
+          Accept: text/html
+        method: GET
+        url: /
+      response:
+        status: 200

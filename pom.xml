@@ -22,12 +22,6 @@
             <url>https://nexus.kuku.me/repository/maven-public/</url>
         </repository>
     </repositories>
-    <pluginRepositories>
-        <pluginRepository>
-            <id>myNexus</id>
-            <url>https://nexus.kuku.me/repository/maven-public/</url>
-        </pluginRepository>
-    </pluginRepositories>
 
     <properties>
         <app.entry>me.kuku.onemanager.AppEntry</app.entry>
@@ -82,11 +76,11 @@
             <artifactId>h2</artifactId>
             <version>1.4.200</version>
         </dependency>
-        <dependency>
-            <groupId>net.sf.ehcache</groupId>
-            <artifactId>ehcache</artifactId>
-            <version>2.10.9.2</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>net.sf.ehcache</groupId>-->
+<!--            <artifactId>ehcache</artifactId>-->
+<!--            <version>2.10.5</version>-->
+<!--        </dependency>-->
     </dependencies>
 
 </project>
