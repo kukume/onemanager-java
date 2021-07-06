@@ -12,4 +12,16 @@
             timeToLiveSeconds="20"
             diskPersistent="false"
             diskExpiryThreadIntervalSeconds="120"/>
+
+
+    <cache
+            name="indexCache"
+            eternal="false"
+            maxElementsInMemory="0"
+            overflowToDisk="true"
+            diskPersistent="false"
+            timeToIdleSeconds="1800"
+            timeToLiveSeconds="1800"
+            maxElementsOnDisk="10000"
+    />
 </ehcache>

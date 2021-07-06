@@ -21,6 +21,7 @@ import org.osgl.mvc.annotation.GetAction;
 import org.osgl.mvc.annotation.PostAction;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -39,7 +40,8 @@ public class AdminController {
 	@Inject
 	private SystemConfigService systemConfigService;
 	@Inject
-	private CacheService cacheService;
+	@Named("indexCache")
+	private CacheService indexCache;
 
 	@PostAction("login")
 	public Result<?> login(String password, H.Session session){
@@ -200,7 +202,7 @@ public class AdminController {
 
 	@PostAction("clearCache")
 	public Result<?> clearCache(){
-		cacheService.clear();
+		indexCache.clear();
 		return Result.success();
 	}
 }

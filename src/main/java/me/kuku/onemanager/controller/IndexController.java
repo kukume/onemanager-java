@@ -13,11 +13,13 @@ import me.kuku.onemanager.service.SystemConfigService;
 import me.kuku.onemanager.utils.DateTimeFormatterUtils;
 import me.kuku.onemanager.utils.MD5Utils;
 import me.kuku.onemanager.utils.OkHttpUtils;
+import org.osgl.cache.CacheService;
 import org.osgl.http.H;
 import org.osgl.mvc.annotation.*;
 import org.osgl.util.StringUtil;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.time.LocalDateTime;
@@ -34,6 +36,9 @@ public class IndexController {
 	private OnedriveLogic onedriveLogic;
 	@Inject
 	private SystemConfigService systemConfigService;
+	@Inject
+	@Named("indexCache")
+	private CacheService indexCache;
 
 	@Catch(value = VerifyFailedException.class)
 	public void error(Exception e){
@@ -112,6 +117,24 @@ public class IndexController {
 		map.put("driveList", driveList);
 	}
 
+	@Before(only = "index", priority = 30)
+	public void indexBefore(String name, String __path, ActionContext context, H.Request<?> req){
+		String method = req.method().name();
+		Object admin = context.renderArg("admin");
+		if (method.equals("GET") && admin != null) {
+			String key = name + "|" + __path + admin;
+			Object o = indexCache.get(key);
+			if (o != null) {
+				IndexCache pojo = (IndexCache) o;
+				Map<String, Object> map = pojo.getMap();
+				map.forEach((k, v) -> {
+					context.renderArg(k, v);
+				});
+				template(pojo.getPath());
+			}
+		}
+	}
+
 	@Action(value = "{name}/...", methods = {H.Method.GET, H.Method.POST})
 	public Object index(String name, String __path, H.Request<?> req, H.Cookie passwordCookie, H.Response<?> resp,
 	                    String password, String preview, ActionContext context) throws IOException {
@@ -167,7 +190,7 @@ public class IndexController {
 					if (password != null){
 						if (password.equals(itemPassword)){
 							needPassword = false;
-							resp.addCookie(new H.Cookie("password", MD5Utils.toMD5(password), contextPath));
+							resp.addCookie(new H.Cookie("password", MD5Utils.toMD5(password), URLEncoder.encode(contextPath, "utf-8")));
 						}
 					}else {
 						if (passwordCookie != null && passwordCookie.value().equals(MD5Utils.toMD5(itemPassword)))
@@ -208,6 +231,19 @@ public class IndexController {
 			map.put("path", __path);
 		}
 		return map;
+	}
+
+	@After(only = "index")
+	public void cacheIndex(String name, String __path, ActionContext context, H.Request<?> req){
+		String method = req.method().name();
+		Object admin = context.renderArg("admin");
+		String key = name + "|" + __path + admin;
+		if (method.equals("GET") && admin != null && indexCache.get(key) == null) {
+			String tempPath = context.templatePath();
+			Map<String, Object> map = new HashMap<>();
+			context.renderArgs().forEach(map::put);
+			indexCache.put(key, new IndexCache(tempPath, map));
+		}
 	}
 
 	private OnedriveItemPojo find(List<OnedriveItemPojo> list, String name){

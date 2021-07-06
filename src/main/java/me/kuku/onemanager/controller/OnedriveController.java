@@ -21,7 +21,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static act.controller.Controller.Util.*;
-import static act.controller.Controller.Util.renderText;
 
 @UrlContext("/onedrive")
 public class OnedriveController {

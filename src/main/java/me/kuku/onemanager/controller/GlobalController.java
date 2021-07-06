@@ -20,7 +20,7 @@ public class GlobalController {
 	@Before
 	public void globalBefore(@HeaderVariable String userAgent){
 		if (userAgent.toUpperCase().contains("QQ")) {
-			forbidden();
+			forbidden("请不要在QQ中打开！！请复制链接到浏览器打开！！");
 			return;
 		}
 		SystemConfigEntity entity = systemConfigService.findByType(SystemConfigType.DISABLED_UA);
