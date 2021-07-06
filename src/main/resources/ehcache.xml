@@ -17,7 +17,7 @@
     <cache
             name="indexCache"
             eternal="false"
-            maxElementsInMemory="0"
+            maxElementsInMemory="1"
             overflowToDisk="true"
             diskPersistent="false"
             timeToIdleSeconds="1800"
