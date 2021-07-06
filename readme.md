@@ -15,3 +15,16 @@
 3、 运行对应的执行文件即可
 
 4、程序运行之后，打开 [http://IP:5460](http://IP:5460) 即可，首次登陆即为设置密码。
+
+
+### 开发
+
+为启动类添加VM属性
+```shell
+-javaagent:lib/lombok.jar=ECJ
+```
+
+打包添加参数
+```shell
+-Dmaven.test.skip=true
+``
