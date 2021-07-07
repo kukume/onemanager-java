@@ -122,7 +122,7 @@ public class IndexController {
 		String method = req.method().name();
 		Object admin = context.renderArg("admin");
 		if (method.equals("GET") && admin != null) {
-			String key = name + "|" + __path + admin;
+			String key = name + __path + admin;
 			Object o = indexCache.get(key);
 			if (o != null) {
 				IndexCache pojo = (IndexCache) o;
@@ -137,7 +137,7 @@ public class IndexController {
 
 	@Action(value = "{name}/...", methods = {H.Method.GET, H.Method.POST})
 	public Object index(String name, String __path, H.Request<?> req, H.Cookie passwordCookie, H.Response<?> resp,
-	                    String password, String preview, ActionContext context) throws IOException {
+	                    String password, String preview, ActionContext context, String url) throws IOException {
 		List<DriveEntity> driveEntityList = driveService.findAll();
 		List<DriveEntity> resultList = driveEntityList.stream().filter(it -> it.getName().equals(name)).collect(Collectors.toList());
 		Map<String, Object> map = context.renderArgs();
@@ -178,13 +178,18 @@ public class IndexController {
 					return render("/preview");
 				}else return moved(pojo.getUrl());
 			}
-			List<OnedriveItemPojo> list = onedriveLogic.listFile(onedrivePojo, paths);
+			OnedriveItemList onedriveItemList;
+			if (url == null) onedriveItemList = onedriveLogic.listFile(onedrivePojo, paths);
+			else onedriveItemList = onedriveLogic.listFileByUrl(onedrivePojo, url);
+			map.put("next", onedriveItemList.getNextLink());
+			List<OnedriveItemPojo> list = onedriveItemList.getList();
 			SystemConfigEntity passwordFileEntity = systemConfigService.findByType(SystemConfigType.PASSWORD_FILE);
 			List<String> filterNameList = new ArrayList<>();
 			if (passwordFileEntity != null){
 				String passwordFileName = passwordFileEntity.getContent();
 				OnedriveItemPojo passwordItemPojo = find(list, passwordFileName);
 				if (passwordItemPojo != null){
+					context.renderArg("needPassword", true);
 					String itemPassword = OkHttpUtils.getStr(passwordItemPojo.getUrl());
 					boolean needPassword = true;
 					if (password != null){
@@ -235,11 +240,13 @@ public class IndexController {
 
 	@After(only = "index")
 	public void cacheIndex(String name, String __path, ActionContext context, H.Request<?> req){
+		if (Boolean.TRUE.equals(context.renderArg("needPassword"))) return;
 		String method = req.method().name();
 		Object admin = context.renderArg("admin");
-		String key = name + "|" + __path + admin;
+		String key = name + __path + admin;
 		if (method.equals("GET") && admin != null && indexCache.get(key) == null) {
 			String tempPath = context.templatePath();
+			if (tempPath.contains("needPassword")) return;
 			Map<String, Object> map = new HashMap<>();
 			context.renderArgs().forEach(map::put);
 			indexCache.put(key, new IndexCache(tempPath, map));

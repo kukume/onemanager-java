@@ -3,7 +3,7 @@
 @import me.kuku.onemanager.pojo.OnedriveItemPojo
 @args List<OnedriveItemPojo> list, String url, List<Map<String, String>> href, String name, String path, String siteName
 @args String prePath, List<Map<String, String>> driveList, String readme, String head, String description, String keywords
-@args Boolean darkMode, Boolean admin, String css, String script, String favicon
+@args Boolean darkMode, Boolean admin, String css, String script, String favicon, String next
 <html lang="zh_cn">
 <head>
     <meta charset="UTF-8">
@@ -115,6 +115,15 @@
                 }
             }
         </ul>
+        @if(!"".equals(next)){
+        <div class="mdui-text-center" style="padding-bottom: 15px">
+            <button onclick="history.back()" class="mdui-btn mdui-color-theme-accent mdui-ripple"><i class="mdui-icon material-icons">chevron_left</i></button>
+            <form action="" method="post" style="display: inline">
+                <input type="hidden" name="url" value="@next">
+                <button type="submit" class="mdui-btn mdui-color-theme-accent mdui-ripple"><i class="mdui-icon material-icons">chevron_right</i></button>
+            </form>
+        </div>
+        }
     </div>
     <br/>
     <br/>

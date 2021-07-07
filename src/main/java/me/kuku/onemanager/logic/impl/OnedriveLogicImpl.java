@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import me.kuku.onemanager.exception.VerifyFailedException;
 import me.kuku.onemanager.logic.OnedriveLogic;
+import me.kuku.onemanager.pojo.OnedriveItemList;
 import me.kuku.onemanager.pojo.OnedriveItemPojo;
 import me.kuku.onemanager.pojo.OnedrivePojo;
 import me.kuku.onemanager.utils.ApiUtils;
@@ -76,9 +77,14 @@ public class OnedriveLogicImpl implements OnedriveLogic {
 	}
 
 	@Override
-	public List<OnedriveItemPojo> listFile(OnedrivePojo oneDrivePojo, String...path) throws IOException {
-		JSONObject jsonObject = OkHttpUtils.getJson("https://graph.microsoft.com/v1.0/me/drive/" + path(path) + "/children",
-				authorizationHeaders(oneDrivePojo.getAccessToken()));
+	public OnedriveItemList listFile(OnedrivePojo oneDrivePojo, String...path) throws IOException {
+		return listFileByUrl(oneDrivePojo, "https://graph.microsoft.com/v1.0/me/drive/" + path(path) + "/children");
+	}
+
+	@Override
+	public OnedriveItemList listFileByUrl(OnedrivePojo onedrivePojo, String url) throws IOException {
+		JSONObject jsonObject = OkHttpUtils.getJson(url,
+				authorizationHeaders(onedrivePojo.getAccessToken()));
 		if (jsonObject.containsKey("error")){
 			JSONObject errorJsonObject = jsonObject.getJSONObject("error");
 			throw new VerifyFailedException(errorJsonObject.getString("code") + "：" + errorJsonObject.getString("message"));
@@ -90,7 +96,7 @@ public class OnedriveLogicImpl implements OnedriveLogic {
 			OnedriveItemPojo pojo = new OnedriveItemPojo(it.getString("id"), it.getString("name"),
 					it.getString("createdDateTime"),
 					it.getString("lastModifiedDateTime"), it.getLong("size"));
-			boolean isFile = !it.containsKey("folder");
+			boolean isFile = it.containsKey("file");
 			pojo.setIsFile(isFile);
 			if (isFile){
 				pojo.setUrl(it.getString("@microsoft.graph.downloadUrl"));
@@ -98,7 +104,10 @@ public class OnedriveLogicImpl implements OnedriveLogic {
 			}
 			list.add(pojo);
 		});
-		return list;
+		OnedriveItemList itemList = new OnedriveItemList();
+		itemList.setList(list);
+		itemList.setNextLink(jsonObject.getString("@odata.nextLink"));
+		return itemList;
 	}
 
 	@Override
