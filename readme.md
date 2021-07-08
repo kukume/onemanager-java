@@ -24,7 +24,7 @@
 -javaagent:lib/lombok.jar=ECJ
 ```
 
-打包添加参数
+打包
 ```shell
--Dmaven.test.skip=true
-``
+mvn clean package -Dmaven.test.skip=true
+```
