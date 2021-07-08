@@ -28,7 +28,7 @@ public class GlobalController {
 			String[] arr = entity.getContent().split("\\|");
 			for (String uaKey : arr) {
 				if ("".equals(uaKey)) continue;
-				if (userAgent.contains(uaKey)) forbidden();
+				if (userAgent.contains(uaKey)) forbidden("禁止的UA");
 			}
 		}
 	}

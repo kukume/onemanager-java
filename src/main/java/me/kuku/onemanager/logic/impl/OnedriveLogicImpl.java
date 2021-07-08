@@ -7,8 +7,8 @@ import me.kuku.onemanager.logic.OnedriveLogic;
 import me.kuku.onemanager.pojo.OnedriveItemList;
 import me.kuku.onemanager.pojo.OnedriveItemPojo;
 import me.kuku.onemanager.pojo.OnedrivePojo;
-import me.kuku.onemanager.utils.ApiUtils;
-import me.kuku.onemanager.utils.OkHttpUtils;
+import me.kuku.utils.MyUtils;
+import me.kuku.utils.OkHttpUtils;
 import okhttp3.Headers;
 import okhttp3.Response;
 import org.osgl.util.StringUtil;
@@ -179,7 +179,7 @@ public class OnedriveLogicImpl implements OnedriveLogic {
 		JSONObject quota = jsonObject.getJSONObject("quota");
 		Long total = quota.getLong("total");
 		Long used = quota.getLong("used");
-		return ApiUtils.parseSize(used) + " / " + ApiUtils.parseSize(total);
+		return MyUtils.parseSize(used) + " / " + MyUtils.parseSize(total);
 	}
 
 	@Override
