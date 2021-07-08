@@ -19,6 +19,10 @@ public class GlobalController {
 	@Global
 	@Before
 	public void globalBefore(@HeaderVariable String userAgent){
+		if (userAgent == null) {
+			forbidden("ua都没有，你不是机器人？");
+			return;
+		}
 		if (userAgent.toUpperCase().contains("QQ")) {
 			forbidden("请不要在QQ中打开！！请复制链接到浏览器打开！！");
 			return;
